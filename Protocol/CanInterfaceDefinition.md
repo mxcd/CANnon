@@ -27,6 +27,7 @@ This file defines the CAN bus communication between target and the CANnon bootlo
 * Interrupt user application
 * Send new program
 * Get CRC of Flash
+* Do CRC self check
 
 ### CAN ID composition
 
@@ -55,3 +56,6 @@ The 29bit extended identifier is split up into multiple sections to enable maski
 * CRC in software
 * CRC in hardware (STM32)
 * CRC in hardware with DMA (STM32)
+
+Store CRC in EEPROM  
+Check Flash on request
