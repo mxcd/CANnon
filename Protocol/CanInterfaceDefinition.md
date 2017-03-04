@@ -59,3 +59,16 @@ The 29bit extended identifier is split up into multiple sections to enable maski
 
 Store CRC in EEPROM  
 Check Flash on request
+
+
+### User Stories
+* [x]1: Bootloader project can be flashed on STM32
+* [ ]2: Bootloader sends CAN message on startup
+* [ ]3: Bootloader stops forwarding when CAN message is received
+* [ ]4: Bootloader works with User Application in flash
+* [ ]5: Bootloader forwards to the User Application after 500ms
+* [ ]6: Bootloader accepts Flash Messages
+* [ ]7: Bootloader stores transfered flash messages
+* [ ]8: Bootloader calculates CRC checksum while flashing
+* [ ]9: Bootloader sends back CRC checksum once done flashing
+* [ ]more fancy stuff
