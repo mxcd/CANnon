@@ -38,6 +38,50 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
+#include "stdlib.h"
+#include "stdbool.h"
+#include "config.h"
+
+/**
+ * Sends out and CAN message on CAN bus 1
+ * @param data: The (max 8 Byte) data array to be sent
+ * @param length: The length of the data array
+ * @param id: CAN Message ID
+ * @param extID: Extended Identifier (23bit) will be used when true, else Standard Identifier (11bit); default = false
+ */
+void can1Send(uint8_t* data, uint8_t length, uint32_t id, bool extId = false)
+{
+	CanTxMsgTypeDef canTxMsg;
+	hcan1.pTxMsg = &canTxMsg;
+	if(extId)
+	{
+		hcan1.pTxMsg->StdId = id & 0x7FF;
+		hcan1.pTxMsg->ExtId = 0x01;
+		hcan1.pTxMsg->IDE = CAN_ID_EXT;
+	}
+	else
+	{
+		hcan1.pTxMsg->StdId = 0x01;
+		hcan1.pTxMsg->ExtId = id & 0x7FFFFF;
+		hcan1.pTxMsg->IDE = CAN_ID_STD;
+	}
+
+	hcan1.pTxMsg->DLC = length;
+
+	uint8_t i;
+	for(i = 0; i < length; ++i)
+	{
+		hcan1.pTxMsg->Data[i] = data[i];
+	}
+
+	HAL_CAN_Transmit_IT(&hcan1);
+}
+
+void sendStartupMessage()
+{
+	uint8_t data[1] = {CHIP_ID};
+	can1Send(data, 1, CAN_STARTUP_MSG_ID, true);
+}
 
 /* USER CODE END 0 */
 
@@ -77,10 +121,10 @@ void HAL_CAN_MspInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_CAN1_CLK_ENABLE();
-  
-    /**CAN1 GPIO Configuration    
+
+    /**CAN1 GPIO Configuration
     PA11     ------> CAN1_RX
-    PA12     ------> CAN1_TX 
+    PA12     ------> CAN1_TX
     */
     GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -105,10 +149,10 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE END CAN1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_CAN1_CLK_DISABLE();
-  
-    /**CAN1 GPIO Configuration    
+
+    /**CAN1 GPIO Configuration
     PA11     ------> CAN1_RX
-    PA12     ------> CAN1_TX 
+    PA12     ------> CAN1_TX
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
 
@@ -116,7 +160,7 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
   /* USER CODE BEGIN CAN1_MspDeInit 1 */
 
   /* USER CODE END CAN1_MspDeInit 1 */
-} 
+}
 
 /* USER CODE BEGIN 1 */
 

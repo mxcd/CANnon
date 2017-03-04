@@ -82,7 +82,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
-  // Send Init CAN Message
+  sendStartupMessage();
 
   /* USER CODE END 2 */
 

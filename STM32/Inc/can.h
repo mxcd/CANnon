@@ -55,6 +55,11 @@ extern void Error_Handler(void);
 void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void can1Send(uint8_t* data, uint8_t length, uint32_t id);
+void sendStartupMessage()
+{
+
+}
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
