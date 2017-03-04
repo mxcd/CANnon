@@ -25,6 +25,14 @@
 		<nature>fr.ac6.mcu.ide.core.MCUProjectNature</nature>
 	</natures>
 	<linkedResources><link>
+			<name>Application/User/gpio.c</name>
+			<type>1</type>
+			<location>PARENT-2-PROJECT_LOC/Src/gpio.c</location>
+		</link><link>
+			<name>Application/User/can.c</name>
+			<type>1</type>
+			<location>PARENT-2-PROJECT_LOC/Src/can.c</location>
+		</link><link>
 			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_dma.c</name>
 			<type>1</type>
 			<location>PARENT-2-PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c</location>
