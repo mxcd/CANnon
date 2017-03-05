@@ -38,8 +38,6 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
-#include "stdlib.h"
-#include "stdbool.h"
 #include "config.h"
 
 /**
@@ -49,22 +47,34 @@
  * @param id: CAN Message ID
  * @param extID: Extended Identifier (23bit) will be used when true, else Standard Identifier (11bit); default = false
  */
-void can1Send(uint8_t* data, uint8_t length, uint32_t id, bool extId = false)
+void can1SendExt(uint8_t* data, uint8_t length, uint32_t id)
 {
 	CanTxMsgTypeDef canTxMsg;
 	hcan1.pTxMsg = &canTxMsg;
-	if(extId)
+	hcan1.pTxMsg->StdId = id & 0x7FF;
+	hcan1.pTxMsg->ExtId = 0x01;
+	hcan1.pTxMsg->IDE = CAN_ID_EXT;
+
+	hcan1.pTxMsg->DLC = length;
+
+	uint8_t i;
+	for(i = 0; i < length; ++i)
 	{
-		hcan1.pTxMsg->StdId = id & 0x7FF;
-		hcan1.pTxMsg->ExtId = 0x01;
-		hcan1.pTxMsg->IDE = CAN_ID_EXT;
+		hcan1.pTxMsg->Data[i] = data[i];
 	}
-	else
-	{
-		hcan1.pTxMsg->StdId = 0x01;
-		hcan1.pTxMsg->ExtId = id & 0x7FFFFF;
-		hcan1.pTxMsg->IDE = CAN_ID_STD;
-	}
+
+	HAL_CAN_Transmit_IT(&hcan1);
+}
+
+/**
+ * Function overload for can1Send with extId
+ */
+void can1SendStd(uint8_t* data, uint8_t length, uint32_t id)
+{
+	CanTxMsgTypeDef canTxMsg;
+	hcan1.pTxMsg->StdId = 0x01;
+	hcan1.pTxMsg->ExtId = id & 0x7FFFFF;
+	hcan1.pTxMsg->IDE = CAN_ID_STD;
 
 	hcan1.pTxMsg->DLC = length;
 
@@ -80,7 +90,7 @@ void can1Send(uint8_t* data, uint8_t length, uint32_t id, bool extId = false)
 void sendStartupMessage()
 {
 	uint8_t data[1] = {CHIP_ID};
-	can1Send(data, 1, CAN_STARTUP_MSG_ID, true);
+	can1SendStd(data, 1, CAN_STARTUP_MSG_ID);
 }
 
 /* USER CODE END 0 */

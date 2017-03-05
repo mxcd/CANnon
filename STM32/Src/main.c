@@ -37,7 +37,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "stdlib.h"
+#include "config.h"
 
 /* USER CODE END Includes */
 

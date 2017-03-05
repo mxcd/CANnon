@@ -43,6 +43,8 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
+#include "config.h"
+
 /* USER CODE END Includes */
 
 extern CAN_HandleTypeDef hcan1;
@@ -55,11 +57,9 @@ extern void Error_Handler(void);
 void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void can1Send(uint8_t* data, uint8_t length, uint32_t id);
-void sendStartupMessage()
-{
-
-}
+void can1SendExt(uint8_t* data, uint8_t length, uint32_t id);
+void can1SendStd(uint8_t* data, uint8_t length, uint32_t id);
+void sendStartupMessage();
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
