@@ -1,0 +1,19 @@
+digraph G
+{
+  size = "4, 4";
+  got_interrupt [label = "Got interrupt message?"];
+  start [label = "Start"];
+  time_exp [label = "T > 500ms"];
+  wait_bl_cmd [label = "Waiting for Bootloader Command"];
+  wait_flash_pack [label = "Waiting for flash pack"];
+  all_received [label = "All flash packs received?"];
+
+  start -> got_interrupt;
+  got_interrupt -> time_exp [label = "No"];
+  got_interrupt -> wait_bl_cmd [label = "Yes"];
+  wait_bl_cmd -> wait_flash_pack [label = "Init flash process"];
+  wait_flash_pack -> wait_flash_pack [label = "x10"];
+  wait_flash_pack -> all_received [label = ""]
+
+
+}
