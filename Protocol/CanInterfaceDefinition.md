@@ -58,8 +58,8 @@ The target device ID is immutable per communication, meaning that the same targe
 | 0x03  |Interrupt startup        |  0|
 | 0x04  |Get program version      |  0|
 | 0x05  |Send programm version    |  8|version (64 LSB of commit id)
-| 0x06  |Get program name         |  1|requester id                 
-| 0x07  |Send program name        |  8|requester id / responder id / 1B packet id / 1B pack count / 4B string
+| 0x06  |Get program name         |  0|                 
+| 0x07  |Send program name        |  8|1B packet id / 1B pack count / 6B string
 | 0x08  |Init flash mode          |  0|
 | 0x09  |ACK request              |  1|uint8: 1-64: Received packs
 | 0x0A  |ACK                      |  0| -> All packs received
@@ -68,6 +68,8 @@ The target device ID is immutable per communication, meaning that the same targe
 | 0x0D  |Get Flash CRC            |  0|
 | 0x0E  |Send Flash CRC           |  2|2 Byte CRC checksum
 | 0x0F  |Start flash process      |  8|Packs per Sprint (8 Bit) / Total Number of Packs (20 Bit)
+| 0x10  |End flash process        |  0|
+| 0x11  |Error message            |  1|Error Code
 | 0xFF  |Start user application   |  0|
 
 #### Boot Menu
