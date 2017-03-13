@@ -1,0 +1,30 @@
+digraph G
+{
+  graph [ dpi = 400 ];
+  start [label="START"];
+  rankdir=LR;
+  {rank = same; user_app; wait_interrupt}
+  wait_interrupt [label="Waiting for interrupt"];
+  user_app [label="User Application"];
+  menu [label="Boot Menu"] [shape="box"] [width="1"] [height="5"];
+  flash_mode [label="Flash Mode"][group=g1];
+  send_ping[label="Send ping"][group=g1];
+  get_version[label="Get programm version"][group=g1];
+  get_name[label="Get programm name"][group=g1];
+  get_crc[label="Get flash CRC"][group=g1];
+
+  start -> wait_interrupt
+  wait_interrupt -> menu [label="Interrupt Message (0x03)"];
+  wait_interrupt -> user_app[label="T>500ms"];
+  menu -> flash_mode [label="Init Flash Mode (0x08)"];
+  flash_mode -> menu [label="Exit Flash Mode (0x0C)"];
+  menu -> send_ping [label="Ping request (0x00, 0x01)"];
+  send_ping -> menu [label="Ping response (0x02)"];
+  menu -> get_version[label="Version request (0x04)"];
+  get_version -> menu[label="Version response (0x05)"];
+  menu -> get_name[label="Name request (0x06)"];
+  get_name -> menu[label="Name response (0x07)"];
+  menu -> get_crc[label="CRC request (0x0D)"];
+  get_crc -> menu [label="CRC response (0x0E)"];
+  menu -> user_app[label="Start user app (0xFF)"]
+}
