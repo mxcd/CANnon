@@ -47,13 +47,14 @@
  * @param id: CAN Message ID
  * @param extID: Extended Identifier (23bit) will be used when true, else Standard Identifier (11bit); default = false
  */
-void can1SendExt(uint8_t* data, uint8_t length, uint32_t id)
+void can1SendStd(uint8_t* data, uint8_t length, uint32_t id)
 {
 	CanTxMsgTypeDef canTxMsg;
 	hcan1.pTxMsg = &canTxMsg;
-	hcan1.pTxMsg->StdId = id & 0x7FF;
+	hcan1.pTxMsg->StdId = id & 0x7FFU;
 	hcan1.pTxMsg->ExtId = 0x01;
-	hcan1.pTxMsg->IDE = CAN_ID_EXT;
+	hcan1.pTxMsg->RTR = CAN_RTR_DATA;
+	hcan1.pTxMsg->IDE = CAN_ID_STD;
 
 	hcan1.pTxMsg->DLC = length;
 
@@ -69,12 +70,14 @@ void can1SendExt(uint8_t* data, uint8_t length, uint32_t id)
 /**
  * Function overload for can1Send with extId
  */
-void can1SendStd(uint8_t* data, uint8_t length, uint32_t id)
+void can1SendExt(uint8_t* data, uint8_t length, uint32_t id)
 {
 	CanTxMsgTypeDef canTxMsg;
+	hcan1.pTxMsg = &canTxMsg;
 	hcan1.pTxMsg->StdId = 0x01;
-	hcan1.pTxMsg->ExtId = id & 0x7FFFFF;
-	hcan1.pTxMsg->IDE = CAN_ID_STD;
+	hcan1.pTxMsg->ExtId = id & 0x1FFFFFFFU;
+	hcan1.pTxMsg->RTR = CAN_RTR_DATA;
+	hcan1.pTxMsg->IDE = CAN_ID_EXT;
 
 	hcan1.pTxMsg->DLC = length;
 
@@ -89,8 +92,8 @@ void can1SendStd(uint8_t* data, uint8_t length, uint32_t id)
 
 void sendStartupMessage()
 {
-	uint8_t data[1] = {CHIP_ID};
-	can1SendStd(data, 1, CAN_STARTUP_MSG_ID);
+	canData[0] = CHIP_ID;
+	can1SendExt(canData, 1, CAN_STARTUP_MSG_ID);
 }
 
 /* USER CODE END 0 */
