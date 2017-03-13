@@ -76,7 +76,7 @@ Check Flash on request
 
 ### User Stories
 * [x]1: Bootloader project can be flashed on STM32
-* [ ]2: Bootloader sends CAN message on startup
+* [x]2: Bootloader sends CAN message on startup
 * [ ]3: Bootloader forwards to user application after time X
 * [ ]4: Bootloader stops forwarding when CAN message is received
 * [ ]5: Bootloader works with User Application in flash
