@@ -1,36 +1,24 @@
 digraph G
 {
   graph [ dpi = 400 ];
-  size = "4, 4";
-  got_interrupt [label = "Got interrupt message?"];
-  start [label = "Start"];
-  time_exp [label = "T > 500ms?"];
-  start_app [label = "Start user application"];
-  wait_bl_cmd [label = "Waiting for Bootloader Command"];
+  menu [label="Boot Menu"] [shape="box"] [width="3"] [height="1"];
+  flash_mode [label="Flash Mode"];
   wait_flash_message [label = "Waiting for flash message"];
   flash_message_received [label = "Flash message received"];
-  all_received [label = "All flash messages received?"];
   ack_request_received [label = "Ack request received"];
   sending_ack [label = "Sending ACK frame"];
-  CRC_ok [label = "CRC check ok"];
-  send_fail [label = "Send 'flash failed' message"];
+  sending_nack [label= "Sending NACK frame"];
   write_to_flash [label = "Write Message to Flash"];
 
-  start -> got_interrupt;
-  got_interrupt -> time_exp [label = "No"];
-  time_exp -> start_app [label = "Yes"];
-  time_exp -> got_interrupt [label = "No"];
-  got_interrupt -> wait_bl_cmd [label = "Yes"];
-  wait_bl_cmd -> wait_flash_message [label = "Init flash process"];
+  menu -> flash_mode [label="Init Flash Mode (0x08)"];
+  flash_mode -> wait_flash_message[label="Start Flash Process (0x0F)"];
+  wait_flash_message -> flash_message_received;
   flash_message_received -> write_to_flash -> wait_flash_message;
-  wait_flash_message -> flash_message_received [label = "x64"];
-  wait_flash_message -> all_received [label = ""];
-  wait_flash_message -> ack_request_received;
-  ack_request_received -> sending_ack;
-  sending_ack -> all_received;
-  all_received -> loading_done [label = "Yes"];
-  all_received -> wait_flash_message [label = "No"];
-  loading_done -> CRC_ok;
-  CRC_ok -> start_app [label = "Yes"];
-  CRC_ok -> send_fail [label = "No"];
+  wait_flash_message -> ack_request_received [label="ACK request (0x09)"];
+  ack_request_received -> sending_ack [label="All received"];
+  sending_ack -> wait_flash_message[label="0x0A"];
+  ack_request_received -> sending_nack[label="Packs missing"];
+  sending_nack -> wait_flash_message[label="0x0B"];
+  wait_flash_message -> flash_mode[label="End flash process (0x10)"];
+  flash_mode -> menu [label="Exit Flash Mode (0x0C)"];
 }
