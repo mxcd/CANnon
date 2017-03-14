@@ -1,3 +1,4 @@
+
 /*
  * target_device.c
  *
@@ -309,4 +310,3 @@ void setChipId()
 {
 	chipID = (uint8_t)getDeviceId();
 }
-

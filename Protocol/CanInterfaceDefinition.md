@@ -74,7 +74,7 @@ The target device ID is immutable per communication, meaning that the same targe
 | 0x13  |Send chip id             |  8|64 Bit chip id
 | 0xFF  |Start user application   |  0|
 
-#### Boot Menu 
+#### Boot Menu
 ![Boot Menu](flowchart_boot_menu2.png)
 
 Starting from a reset, first the bootloader is started and waits up to 500ms for an incoming **Interrupt Message (0x03)**. If this message arrives, the target enters the bootloader menu and stays there unless told otherwise. The bootloader menu can be quit by sending the **Start user app (0xFF)** message. If no **Interrupt message (0x03)** is received within the timeout (500ms), the bootloader will jump to the **user application**.
