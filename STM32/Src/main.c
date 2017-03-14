@@ -38,6 +38,8 @@
 
 /* USER CODE BEGIN Includes */
 #include "config.h"
+#include "link_layer.h"
+#include "target_device.h"
 
 /* USER CODE END Includes */
 
@@ -83,6 +85,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   sendStartupMessage();
+  setChipId();
 
   /* USER CODE END 2 */
 

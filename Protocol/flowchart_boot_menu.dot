@@ -6,12 +6,13 @@ digraph G
   {rank = same; user_app; wait_interrupt}
   wait_interrupt [label="Waiting for interrupt"];
   user_app [label="User Application"];
-  menu [label="Boot Menu"] [shape="box"] [width="1"] [height="5"];
+  menu [label="Boot Menu"] [shape="box"] [width="1"] [height="6"];
   flash_mode [label="Flash Mode"][group=g1];
   send_ping[label="Send ping"][group=g1];
   get_version[label="Get programm version"][group=g1];
   get_name[label="Get programm name"][group=g1];
   get_crc[label="Get flash CRC"][group=g1];
+  get_chip_id[label="Get chip id"][group=g1];
 
   start -> wait_interrupt
   wait_interrupt -> menu [label="Interrupt Message (0x03)"];
@@ -27,4 +28,6 @@ digraph G
   menu -> get_crc[label="CRC request (0x0D)"];
   get_crc -> menu [label="CRC response (0x0E)"];
   menu -> user_app[label="Start user app (0xFF)"]
+  menu -> get_chip_id[label="ChipId request (0x12)"];
+  get_chip_id -> menu[label="Send ChipId (0x13)"];
 }

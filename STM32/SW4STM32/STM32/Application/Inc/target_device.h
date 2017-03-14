@@ -10,6 +10,7 @@
 
 #include "config.h"
 #include "stdbool.h"
+#include "link_layer.h"
 
 /**
  * Command ID defines start
@@ -31,28 +32,38 @@
 #define SEND_CRC_ID			0x0E // OUTGOING   -->
 #define START_FLASH_ID		0x0F // INCOMING <--
 #define END_FLASH_ID		0x10 // INCOMING <--
+#define ERROR_ID			0x11 // OUTGOING   -->
+#define GET_CHIP_ID			0x12 // INCOMING <--
+#define SEND_CHIP_ID		0x13 // Outgoing   -->
 #define START_APP_ID		0xFF // INCOMING <--
 /**
  * Command ID defines end
  */
 
 /**
- * Generic Message definition
+ * Error Codes
  */
-typedef struct
-{
-	bool FOF; // FlashOperationField, used when flash packs are being sent
+#define ERRCODE_OK 						0U
+#define ERRCODE_NO_FLASH_PROCESS 		1U
+#define ERRCODE_NOT_IN_FLASH_MODE 		2U
+#define ERRCODE_NOT_IN_BOOT_MENU		3U
+#define ERRCODE_ALREADY_FLASHING		4U
 
-	uint8_t targetDeviceId; // ID of the target device, always used
+/**
+ * Private Variables
+ */
+bool bootMenu;
+bool flashMode;
+bool inFlashProcess;
 
-	uint32_t flashPackId; 	// ID of the flash pack, only used when FOF == 1
+uint32_t packCount;			// Total amount of packs for flash
+uint32_t packCounter;		// Current pack
+uint8_t sprintPackCount;	// Number of packs per sprint
+uint8_t sprintPackCounter;	// Current pack in sprint
+uint64_t sprintFlags; 		// 64Bit number flagging arrived packs
 
-	uint8_t commandId; 		// Command ID of the message, used when FOF == 0
-
-	uint8_t length;			// Length of the data array
-
-	uint8_t data[8];		// Data array of the message
-}BlGenericMessage;
+// Assign default Chip ID
+uint8_t chipID;
 
 /**
  * Function definitions
@@ -64,10 +75,19 @@ void sendVersion();
 void sendName();
 void initFlashMode();
 void exitFlashMode();
-void startFlashing();
+void startFlashing(BlGenericMessage* msg);
 void stopFlashing();
 void sendError(uint8_t errCode);
 void checkSprint();
 void sendCRC();
+void sendChipId();
+void startApplication();
+
+void tryToWriteFlash(BlGenericMessage* msg);
+
+/**
+ * Helper functions
+ */
+void setChipId();
 
 #endif /* APPLICATION_INC_TARGET_DEVICE_H_ */
