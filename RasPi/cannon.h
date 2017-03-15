@@ -22,7 +22,7 @@
 
 #include "lib.h"
 
-int main(int argc, char **argv);
+//int main(int argc, char **argv);
 void doBroadcastPing();
 
 #endif /* CANNON_H_ */
