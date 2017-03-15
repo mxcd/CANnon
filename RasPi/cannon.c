@@ -20,4 +20,6 @@ int main(int argc, char **argv)
 	{
 		msg.data[i] = i*2;
 	}
+	initCanInterface();
+	sendMessage(&msg);
 }
