@@ -48,6 +48,32 @@ CanMessage receiveMessage()
 	return msg;
 }
 
+void sendGenericMessage(BlGenericMessage* msg)
+{
+	int id = ((msg->FOF & 0x1) << 28);
+	id |= (msg->targetDeviceId & 0xFF) << 20;
+	if(msg->FOF)
+	{
+		id |= (msg->flashPackId & 0xFFFFF);
+	}
+	else
+	{
+		id |= (msg->commandId & 0xFF) << 12;
+	}
+
+	CanMessage cMsg;
+	cMsg.dlc = msg->length;
+	cMsg.id = id;
+	cMsg.ext = 1;
+	int i;
+	for(i = 0; i < msg->length; ++i)
+	{
+		cMsg.data[i] = msg->data[i];
+//		printf("%i:%x\n", i, msg->data[i]);
+	}
+	sendMessage(&cMsg);
+}
+
 void sendMessage(CanMessage* msg)
 {
 	int nbytes;
@@ -55,6 +81,7 @@ void sendMessage(CanMessage* msg)
 	struct can_frame frame;
 	frame.can_dlc = msg->dlc;
 	frame.can_id = msg->id;
+//	printf("Sending msg /w id %x\n", msg->id);
 	if(msg->ext)
 	{
 		frame.can_id |= CAN_EFF_FLAG;

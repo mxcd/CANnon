@@ -25,7 +25,7 @@
 
 #include "CanMessage.h"
 
-
+void sendGenericMessage(BlGenericMessage* msg);
 void sendMessage(CanMessage* msg);
 CanMessage receiveMessage();
 bool available();
