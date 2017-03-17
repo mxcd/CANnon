@@ -50,6 +50,7 @@ CanMessage receiveMessage()
 void sendMessage(CanMessage* msg)
 {
 	int nbytes;
+	int i;
 	struct can_frame frame;
 	frame.can_dlc = msg->dlc;
 	frame.can_id = msg->id;
