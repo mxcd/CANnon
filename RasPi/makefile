@@ -30,7 +30,7 @@ cantest : lib.o cantest.o cannon.o
 	gcc -o cantest lib.o cantest.o cannon.o
 	
 cannon : lib.o CanInterface.o cannon.o
-	g++ -o cannon lib.o CanInterface.o cannon.o
+	gcc -o cannon lib.o CanInterface.o cannon.o
 
 
 # The next lines generate the various object files
@@ -41,9 +41,9 @@ lib.o : lib.c
 cantest.o : cantest.c 
 	gcc -c cantest.c
 	
-CanInterface.o : CanInterface.cpp
-	g++ -c CanInterface.cpp
+CanInterface.o : CanInterface.c
+	gcc -c CanInterface.c
 
-cannon.o : cannon.cpp
-	g++ -c cannon.cpp
+cannon.o : cannon.c
+	gcc -c cannon.c
 	

@@ -5,19 +5,10 @@
  *      Author: max
  */
 
+#include "CanMessage.h"
 #include "CanInterface.h"
 
-CanInterface::CanInterface()
-{
-	baseSocket = 0;
-}
-
-CanInterface::~CanInterface()
-{
-
-}
-
-void CanInterface::initCanInterface()
+void initCanInterface()
 {
 	struct sockaddr_can addr;
 	struct ifreq ifr;
@@ -45,26 +36,26 @@ void CanInterface::initCanInterface()
 	}
 }
 
-bool CanInterface::available()
+bool available()
 {
 	return false;
 }
 
-CanMessage* CanInterface::receiveMessage()
+CanMessage receiveMessage()
 {
-	CanMessage* msg = new CanMessage();
+	CanMessage msg;
 	return msg;
 }
 
-void CanInterface::sendMessage(CanMessage* msg)
+void sendMessage(CanMessage* msg)
 {
 	int nbytes;
 	struct can_frame frame;
-	frame.can_dlc = msg->getDlc();
-	frame.can_id = msg->getId();
-	for(int i = 0; i < msg->getDlc(); ++i)
+	frame.can_dlc = msg->dlc;
+	frame.can_id = msg->id;
+	for(int i = 0; i < msg->dlc; ++i)
 	{
-		frame.data[i] = msg->getData()[i];
+		frame.data[i] = msg->data[i];
 	}
 
 	if ((nbytes = write(baseSocket, &frame, sizeof(frame))) != sizeof(frame))

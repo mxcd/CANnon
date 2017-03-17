@@ -9,6 +9,7 @@
 #define CANINTERFACE_H_
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -24,21 +25,11 @@
 
 #include "CanMessage.h"
 
-class CanInterface
-{
-public:
-	CanInterface();
-	~CanInterface();
 
-	void sendMessage(CanMessage* msg);
-	CanMessage* receiveMessage();
-	bool available();
-private:
-	void initCanInterface();
-
-	int baseSocket; /* can raw socket */
-};
-
-
+void sendMessage(CanMessage* msg);
+CanMessage receiveMessage();
+bool available();
+void initCanInterface();
+int baseSocket; /* can raw socket */
 
 #endif /* CANINTERFACE_H_ */
