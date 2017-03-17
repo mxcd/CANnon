@@ -5,21 +5,34 @@
  *      Author: max
  */
 
+#include "config.h"
 #include "cannon.h"
 #include "CanInterface.h"
 #include "CanMessage.h"
 
 int main(int argc, char **argv)
 {
-	CanMessage msg;
-	msg.id = 42;
-	msg.dlc = 4;
-
-	int i;
-	for(i = 0; i < 4; ++i)
-	{
-		msg.data[i] = i*2;
-	}
 	initCanInterface();
+	if(argc == 0)
+	{
+		// print help
+	}
+	else if(argc == 1)
+	{
+		if(strcmp("ping",argv[0]) != 0)
+		{
+			printf("Doing broadcast ping...");
+			doBroadcastPing();
+		}
+	}
+}
+
+void doBroadcastPing()
+{
+	CanMessage msg;
+
+	msg.id = 0 << 28;
+	msg.id += BROADCAST_PING_ID << 12;
+	msg.data[0] = CANNON_DEVICE_ID;
 	sendMessage(&msg);
 }
