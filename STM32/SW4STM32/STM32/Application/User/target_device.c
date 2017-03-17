@@ -217,6 +217,7 @@ void checkSprint()
 		if(complete)
 		{
 			//sendAck();
+			//reset sprint flags and counter
 		}
 		else
 		{
