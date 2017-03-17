@@ -67,15 +67,8 @@ void CanInterface::sendMessage(CanMessage* msg)
 		frame.data[i] = msg->getData()[i];
 	}
 
-	for(int i = 0; i < 100; ++i)
+	if ((nbytes = write(baseSocket, &frame, sizeof(frame))) != sizeof(frame))
 	{
-		if ((nbytes = write(baseSocket, &frame, sizeof(frame))) != sizeof(frame))
-		{
-			perror("write");
-		}
-
-		fprintf(stderr, "%d \n", i);
-
-		usleep(10000); /* Delay before next loop */
+		perror("write");
 	}
 }

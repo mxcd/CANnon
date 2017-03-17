@@ -24,7 +24,6 @@
 
 #include "CanMessage.h"
 
-
 class CanInterface
 {
 public:
