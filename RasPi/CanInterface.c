@@ -7,6 +7,7 @@
 
 #include "CanMessage.h"
 #include "CanInterface.h"
+#include <stdbool.h>
 
 void initCanInterface()
 {
