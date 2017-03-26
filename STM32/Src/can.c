@@ -96,6 +96,24 @@ void sendStartupMessage()
 	can1SendExt(canData, 1, CAN_STARTUP_MSG_ID);
 }
 
+void can1InitFilterMask()
+{
+	// [10:3][2:0 17:13][12:5][4:0 IDE RTR 0]
+	// [28:21][20:13]||[12:5][4:0 IDE RTR 0]
+	CAN_FilterConfTypeDef canFilter;
+	canFilter.FilterIdHigh = (CHIP_ID << 7);
+	canFilter.FilterIdLow = 0x0000;
+	canFilter.FilterMaskIdHigh = 0x0FF0;
+	canFilter.FilterMaskIdLow = 0x0000;
+	canFilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+	canFilter.FilterNumber = 0;
+	canFilter.BankNumber = 28;
+	canFilter.FilterMode = CAN_FILTERMODE_IDMASK;
+	canFilter.FilterScale = CAN_FILTERSCALE_32BIT;
+	canFilter.FilterActivation = ENABLE;
+	HAL_CAN_ConfigFilter(&hcan1, &canFilter);
+}
+
 /* USER CODE END 0 */
 
 CAN_HandleTypeDef hcan1;
