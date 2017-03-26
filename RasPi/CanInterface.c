@@ -55,6 +55,10 @@ void sendMessage(CanMessage* msg)
 	struct can_frame frame;
 	frame.can_dlc = msg->dlc;
 	frame.can_id = msg->id;
+	if(msg->ext)
+	{
+		frame.can_id |= CAN_EFF_FLAG;
+	}
 	for(i = 0; i < msg->dlc; ++i)
 	{
 		frame.data[i] = msg->data[i];
