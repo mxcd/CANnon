@@ -32,6 +32,7 @@ Mcu.UserName=STM32F405RGTx
 MxCube.Version=4.19.0
 MxDb.Version=DB.4.0.190
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true
+NVIC.CAN1_RX0_IRQn=true\:0\:0\:false\:false\:true
 NVIC.DebugMonitor_IRQn=true\:0\:0\:false\:false\:true
 NVIC.HardFault_IRQn=true\:0\:0\:false\:false\:true
 NVIC.MemoryManagement_IRQn=true\:0\:0\:false\:false\:true
