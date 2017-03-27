@@ -74,6 +74,7 @@ void processBlMessage(BlGenericMessage* msg)
 void sendPingResponse(BlGenericMessage* msg)
 {
 	msg->data[1] = chipID;
+	msg->length = 2;
 	sendGenericMessage(msg);
 }
 

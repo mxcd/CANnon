@@ -51,7 +51,9 @@ extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
 
+CanRxMsgTypeDef messageRx;
 uint8_t canData[8];
+
 /* USER CODE END Private defines */
 
 extern void Error_Handler(void);

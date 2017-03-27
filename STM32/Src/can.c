@@ -41,6 +41,17 @@
 #include "config.h"
 #include "target_device.h"
 
+
+
+void can1Init()
+{
+	extern CanRxMsgTypeDef messageRx;
+	hcan1.pRxMsg = &messageRx;
+	can1InitFilterMask();
+	HAL_CAN_Receive_IT(&hcan1, CAN_FILTER_FIFO0);
+}
+
+
 /**
  * Sends out and CAN message on CAN bus 1
  * @param data: The (max 8 Byte) data array to be sent
@@ -119,14 +130,15 @@ void can1InitFilterMask()
 	canFilter.FilterActivation = ENABLE;
 	HAL_CAN_ConfigFilter(&hcan1, &canFilter);
 
+	// [28:21][20:13]||[12:5][4:0 IDE RTR 0]
 	canFilter.FilterIdHigh = ((BROADCAST_PING_ID >> 1) & 0x7F);
 	canFilter.FilterIdLow = ((BROADCAST_PING_ID << 15) & 0x8000);
-	canFilter.FilterMaskIdHigh = 0x0;
-	canFilter.FilterMaskIdLow = 0x0;
+	canFilter.FilterMaskIdHigh = 0x007F;
+	canFilter.FilterMaskIdLow = 0x8000;
 	canFilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 	canFilter.FilterNumber = 1;
 	canFilter.BankNumber = 28;
-	canFilter.FilterMode = CAN_FILTERMODE_IDLIST;
+	canFilter.FilterMode = CAN_FILTERMODE_IDMASK;
 	canFilter.FilterScale = CAN_FILTERSCALE_32BIT;
 	canFilter.FilterActivation = ENABLE;
 	HAL_CAN_ConfigFilter(&hcan1, &canFilter);

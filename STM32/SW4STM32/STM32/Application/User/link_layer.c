@@ -22,7 +22,7 @@
 void initDevice()
 {
 	setChipId();
-	can1InitFilterMask();
+	can1Init();
 }
 
 void deinitDevice()
@@ -95,6 +95,11 @@ void writeMessageToFlash(uint8_t* data, uint32_t position)
 	// TODO
 }
 
+void handleNewMessage()
+{
+
+}
+
 /**
  * Jumps to the start of the user application after deinitializing interrupts.
  */
@@ -133,14 +138,14 @@ void jumpToUserApp(void) {
 	//if ((*(__IO uint32_t*)GTBL_AppStartAddress) == BL_UAStartPattern)
 	{
 		// point to application reset handler (APPLICATION_ADDRESS +4 bytes)
-		JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
+		/*JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
 		JumpToApplication = (pFunction) JumpAddress;
 
 		// update main stack pointer (MSP) register value
 		__set_MSP(*(__IO uint32_t*) GTBL_AppStartAddress);
 
 		// execute application code
-		JumpToApplication();
+		JumpToApplication();*/
 	}
 }
 

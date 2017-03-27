@@ -36,7 +36,11 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "link_layer.h"
+#include "target_device.h"
+#include "can.h"
+#include "config.h"
+extern CanRxMsgTypeDef messageRx;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -190,11 +194,34 @@ void SysTick_Handler(void)
 void CAN1_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
-	// TODO: Write some code for interrupt handling here
   /* USER CODE END CAN1_RX0_IRQn 0 */
   HAL_CAN_IRQHandler(&hcan1);
   /* USER CODE BEGIN CAN1_RX0_IRQn 1 */
+  HAL_CAN_Receive_IT(&hcan1, CAN_FilterFIFO0);
+  BlGenericMessage msg;
+  msg.FOF = ((messageRx.ExtId >> 28) & 0x1);
+  msg.targetDeviceId = ((messageRx.ExtId >> 20) & 0xFF);
+  msg.length = messageRx.DLC;
+  if(msg.FOF)
+  {
+	 msg.flashPackId = (messageRx.ExtId & 0xFFFFF);
+	 msg.commandId = 0;
+  }
+  else
+  {
+	  msg.flashPackId = 0;
+	  msg.commandId = ((messageRx.ExtId >> 12) & 0xFF);
+  }
+  uint8_t i;
+  for(i = 0; i < 8; ++i)
+  {
+	  if(i < msg.length)
+		  msg.data[i] = messageRx.Data[i];
+	  else
+		  msg.data[i] = 0;
+  }
 
+  processBlMessage(&msg);
   /* USER CODE END CAN1_RX0_IRQn 1 */
 }
 

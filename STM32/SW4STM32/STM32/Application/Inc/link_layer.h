@@ -53,6 +53,8 @@ void writeMessageToFlash(uint8_t* data, uint32_t position);
 
 uint64_t getDeviceId();
 
+void handleNewMessage();
+
 /**
  * Helper functions
  */
