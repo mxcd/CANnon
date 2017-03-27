@@ -63,8 +63,6 @@ uint8_t sprintPackCount;	// Number of packs per sprint
 uint8_t sprintPackCounter;	// Current pack in sprint
 uint64_t sprintFlags; 		// 64Bit number flagging arrived packs
 
-// Assign default Chip ID
-uint8_t chipID;
 
 /**
  * Function definitions
@@ -85,10 +83,7 @@ void sendChipId();
 void startApplication();
 
 void tryToWriteFlash(BlGenericMessage* msg);
-
-/**
- * Helper functions
- */
-void setChipId();
+void sendAck();
+void sendNack(uint64_t sprintFlags);
 
 #endif /* APPLICATION_INC_TARGET_DEVICE_H_ */

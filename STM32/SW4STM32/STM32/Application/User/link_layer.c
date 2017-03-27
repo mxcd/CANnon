@@ -6,6 +6,7 @@
  */
 
 #include "link_layer.h"
+#include "can.h"
 
 
 #define GTBL_STM32Addr_UUIDHigh		(uint32_t*) 0x1FFF7A18		//32bit
@@ -18,14 +19,15 @@
 #define GTBL_AppEndAddress		GTBL_AppStartAddress + GTBL_AppLen -4
 
 
-void initMessageInterface()
+void initDevice()
 {
-	// TODO
+	setChipId();
+	can1InitFilterMask();
 }
 
-void deinitMessageInterface()
+void deinitDevice()
 {
-	// TODO
+	HAL_CAN_MspDeInit(&hcan1);
 }
 
 /**
@@ -33,37 +35,70 @@ void deinitMessageInterface()
  */
 void sendGenericMessage(BlGenericMessage* msg)
 {
-	// TODO
+	// Build Message ID
+	// [FOF == 1][Target ID][Flash Pack ID]
+	// [   28   ][ 27 - 20 ][    19 - 0   ]
+	//
+	// [FOF == 0][Target ID][CMD ID]
+	// [   28   ][ 27 - 20 ][ 19-12]
+
+	uint32_t id = ((msg->FOF & 0x1) << 28);
+	id |= (msg->targetDeviceId & 0xFF) << 20;
+	if(msg->FOF)
+	{
+		id |= (msg->flashPackId & 0xFFFFF);
+	}
+	else
+	{
+		id |= (msg->commandId & 0xFF) << 12;
+	}
+
+	can1SendExt(msg->data, msg->length, id);
+}
+
+
+
+/**
+ * Unlocks the flash memory, so that it is accessible and can be written
+ */
+void unlockFlash()
+{
+	// TODO: Does this have to be done before every byte or just once before flash operation starts?
+	// Do I need to clear the flash before "flashing" the new programm?
+}
+
+/**
+ * Locks the flash after successful falsh operation again
+ */
+void lockFlash()
+{
+	// TODO: Really necessary or just hw reset?
 }
 
 /**
  * Writes a single byte to the flash memory
  * @param data: The data to be written to the flash memory
- * @param position: The position in flash
+ * @param position: The byte position in flash
  */
-void writeToFlash(uint8_t data, uint32_t position)
+void writeByteToFlash(uint8_t data, uint32_t position)
 {
 	// TODO
 }
 
 /**
- * Jumps to the start of the user application
+ * Writes a 8 byte block to the flash memory
+ * @param data: The data to be written to the flash memory
+ * @param position: The byte position (start) in flash
  */
-void jumpToUserApp()
+void writeMessageToFlash(uint8_t* data, uint32_t position)
 {
-	// TODO Better let Ecki check that
-	extern pFunction GTBL_JumpToApplication;
-	extern uint32_t GTBL_JumpAddress;
-
-	/* Jump to user application */
-	GTBL_JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
-	GTBL_JumpToApplication = (pFunction) GTBL_JumpAddress;
-	/* Initialize user application's Stack Pointer */
-	__set_MSP(*(__IO uint32_t*) GTBL_AppStartAddress);
-	GTBL_JumpToApplication();
+	// TODO
 }
 
-void BL_RunUserApp(void) {
+/**
+ * Jumps to the start of the user application after deinitializing interrupts.
+ */
+void jumpToUserApp(void) {
 
 	extern pFunction JumpToApplication;
 	extern uint32_t JumpAddress;
@@ -88,18 +123,21 @@ void BL_RunUserApp(void) {
 	RCC->CIR = 0x00000000;
 	FLASH->ACR = 0;
 
-
 	__ISB();
 	__DSB();
 
+
 	//basic test for valid application vector table start
-	if ((*(__IO uint32_t*)BL_UAStartAddress) == BL_UAStartPattern) {
+
+	// TODO: ask binder. Until then: ignore check
+	//if ((*(__IO uint32_t*)GTBL_AppStartAddress) == BL_UAStartPattern)
+	{
 		// point to application reset handler (APPLICATION_ADDRESS +4 bytes)
-		JumpAddress = *(__IO uint32_t*) (BL_UAStartAddress + 4);
+		JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
 		JumpToApplication = (pFunction) JumpAddress;
 
 		// update main stack pointer (MSP) register value
-		__set_MSP(*(__IO uint32_t*) BL_UAStartAddress);
+		__set_MSP(*(__IO uint32_t*) GTBL_AppStartAddress);
 
 		// execute application code
 		JumpToApplication();
@@ -112,4 +150,9 @@ uint64_t getDeviceId()
 	devId = (uint64_t) *GTBL_STM32Addr_UUIDLow;
 	devId += ((uint64_t)*GTBL_STM32Addr_UUIDMid) << 32;
 	return devId;
+}
+
+void setChipId()
+{
+	chipID = (uint8_t)getDeviceId();
 }

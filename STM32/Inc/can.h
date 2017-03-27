@@ -61,6 +61,7 @@ void MX_CAN1_Init(void);
 /* USER CODE BEGIN Prototypes */
 void can1SendExt(uint8_t* data, uint8_t length, uint32_t id);
 void can1SendStd(uint8_t* data, uint8_t length, uint32_t id);
+void can1InitFilterMask();
 void sendStartupMessage();
 /* USER CODE END Prototypes */
 

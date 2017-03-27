@@ -37,16 +37,25 @@ typedef struct
 
 typedef  void (*pFunction)(void);
 
-void initMessageInterface();
-void deinitMessageInterface();
+// Assign default Chip ID
+uint8_t chipID;
+
+void initDevice();
+void deinitDevice();
 void jumpToUserApp();
 
 void sendGenericMessage(BlGenericMessage* msg);
 
-void writeToFlash(uint8_t data, uint32_t position);
+void unlockFlash();
+void lockFlash();
+void writeByteToFlash(uint8_t data, uint32_t position);
+void writeMessageToFlash(uint8_t* data, uint32_t position);
 
 uint64_t getDeviceId();
 
-
+/**
+ * Helper functions
+ */
+void setChipId();
 
 #endif /* APPLICATION_INC_LINK_LAYER_H_ */

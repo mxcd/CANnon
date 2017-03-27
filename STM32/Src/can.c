@@ -39,6 +39,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "config.h"
+#include "target_device.h"
 
 /**
  * Sends out and CAN message on CAN bus 1
@@ -98,8 +99,13 @@ void sendStartupMessage()
 
 void can1InitFilterMask()
 {
+	// The following filters are required:
+	// * Filter masked for target device id
+	// * Filter for broadcast ping
+
 	// [10:3][2:0 17:13][12:5][4:0 IDE RTR 0]
 	// [28:21][20:13]||[12:5][4:0 IDE RTR 0]
+	// 0000 0000 0000 0000 || 0000 0000 0000 0000
 	CAN_FilterConfTypeDef canFilter;
 	canFilter.FilterIdHigh = (CHIP_ID << 7);
 	canFilter.FilterIdLow = 0x0000;
@@ -109,6 +115,18 @@ void can1InitFilterMask()
 	canFilter.FilterNumber = 0;
 	canFilter.BankNumber = 28;
 	canFilter.FilterMode = CAN_FILTERMODE_IDMASK;
+	canFilter.FilterScale = CAN_FILTERSCALE_32BIT;
+	canFilter.FilterActivation = ENABLE;
+	HAL_CAN_ConfigFilter(&hcan1, &canFilter);
+
+	canFilter.FilterIdHigh = ((BROADCAST_PING_ID >> 1) & 0x7F);
+	canFilter.FilterIdLow = ((BROADCAST_PING_ID << 15) & 0x8000);
+	canFilter.FilterMaskIdHigh = 0x0;
+	canFilter.FilterMaskIdLow = 0x0;
+	canFilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+	canFilter.FilterNumber = 1;
+	canFilter.BankNumber = 28;
+	canFilter.FilterMode = CAN_FILTERMODE_IDLIST;
 	canFilter.FilterScale = CAN_FILTERSCALE_32BIT;
 	canFilter.FilterActivation = ENABLE;
 	HAL_CAN_ConfigFilter(&hcan1, &canFilter);

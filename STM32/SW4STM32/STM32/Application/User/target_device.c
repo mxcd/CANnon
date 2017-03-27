@@ -209,23 +209,52 @@ void sendError(uint8_t errCode)
  */
 void checkSprint()
 {
-	// TODO
 	// Check if all required packs arrived
 	if(sprintPackCount == sprintPackCounter)
 	{
 		bool complete =  (sprintFlags & ((1u << sprintPackCount) - 1)) == (1u << sprintPackCount) - 1;
 		if(complete)
 		{
-			//sendAck();
-			//reset sprint flags and counter
+			sendAck();
+			sprintFlags = 0;
+			sprintPackCount = 0;
 		}
 		else
 		{
-			//sendNack(sprintFlags);
+			sendNack(sprintFlags);
 		}
 	}
 	// If yes: Send ACK
 	// If no: Send NACK with bit array of received packs
+}
+
+void sendAck()
+{
+	BlGenericMessage msg;
+	msg.FOF = 0;
+	msg.commandId = 0x0A;
+	msg.flashPackId = 0;
+	msg.targetDeviceId = chipID;
+	msg.length = 0;
+
+	sendGenericMessage(&msg);
+}
+
+void sendNack(uint64_t sprintFlags)
+{
+	BlGenericMessage msg;
+	msg.FOF = 0;
+	msg.commandId = 0x0B;
+	msg.flashPackId = 0;
+	msg.length = 8;
+	msg.targetDeviceId = chipID;
+	uint8_t i;
+	for(i = 0; i < 8; ++i)
+	{
+		msg.data[i] = sprintFlags >> (i*8);
+	}
+
+	sendGenericMessage(&msg);
 }
 
 /**
@@ -262,8 +291,7 @@ void sendChipId()
  */
 void startApplication()
 {
-	// TODO
-	deinitMessageInterface();
+	deinitDevice();
 	jumpToUserApp();
 }
 
@@ -284,11 +312,18 @@ void tryToWriteFlash(BlGenericMessage* msg)
 			sprintFlags |= (1<<sprintPosition);
 
 			// Write pack to flash, calculating CRC alongside
-			uint8_t i;
-			for(i = 0; i < 8; ++i)
+			if(msg->length == 8)
 			{
-				writeToFlash(msg->data[i], (packId + i));
-				// TODO addToCRC(msg->data[i])
+				writeMessageToFlash(msg->data, (packId*8));
+			}
+			else
+			{
+				uint8_t i;
+				for(i = 0; i < msg->length; ++i)
+				{
+					writeByteToFlash(msg->data[i], ((packId*8) + i));
+					// TODO addToCRC(msg->data[i])
+				}
 			}
 
 			++packCounter;
@@ -305,9 +340,4 @@ void tryToWriteFlash(BlGenericMessage* msg)
 		// Trying to write flash without being in flash mode -> ERROR
 		sendError(ERRCODE_NOT_IN_FLASH_MODE);
 	}
-}
-
-void setChipId()
-{
-	chipID = (uint8_t)getDeviceId();
 }

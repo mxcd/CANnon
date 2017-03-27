@@ -83,9 +83,9 @@ int main(void)
   MX_CAN1_Init();
 
   /* USER CODE BEGIN 2 */
-
+  initDevice();
   sendStartupMessage();
-  setChipId();
+
 
   /* USER CODE END 2 */
 
