@@ -15,16 +15,16 @@ int main(int argc, char **argv)
 	initCanInterface();
 	if(argc < 2)
 	{
-		fprintf(stderr, "got no arg");
+		fprintf(stderr, "got no arg\n");
 		// print help
-		fprintf(stderr, "Please use the help");
+		fprintf(stderr, "Please use the help\n");
 	}
 	else if(argc == 2)
 	{
-		fprintf(stderr, "Got one args");
+		fprintf(stderr, "Got one args\n");
 		if(strcmp("ping",argv[1]) == 0)
 		{
-			fprintf(stderr, "Doing broadcast ping...");
+			fprintf(stderr, "Doing broadcast ping...\n");
 			doBroadcastPing();
 		}
 	}
@@ -37,5 +37,7 @@ void doBroadcastPing()
 	msg.id = 0 << 28;
 	msg.id += BROADCAST_PING_ID << 12;
 	msg.data[0] = CANNON_DEVICE_ID;
+	msg.ext = 1;
+	printf("Sending msg with CAN id %lu\n", msg.id);
 	sendMessage(&msg);
 }
