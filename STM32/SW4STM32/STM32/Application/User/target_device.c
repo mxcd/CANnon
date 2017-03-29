@@ -114,6 +114,8 @@ void initFlashMode()
 	{
 		flashMode = true;
 		bootMenu = false;
+		unlockFlash();
+		clearUserAppFlash();
 	}
 	else
 	{
@@ -131,6 +133,7 @@ void exitFlashMode()
 	{
 		flashMode = false;
 		bootMenu = true;
+		lockFlash();
 	}
 	else
 	{
@@ -313,19 +316,7 @@ void tryToWriteFlash(BlGenericMessage* msg)
 			sprintFlags |= (1<<sprintPosition);
 
 			// Write pack to flash, calculating CRC alongside
-			if(msg->length == 8)
-			{
-				writeMessageToFlash(msg->data, (packId*8));
-			}
-			else
-			{
-				uint8_t i;
-				for(i = 0; i < msg->length; ++i)
-				{
-					writeByteToFlash(msg->data[i], ((packId*8) + i));
-					// TODO addToCRC(msg->data[i])
-				}
-			}
+			writeMessageToFlash(msg->data, (packId*2), msg->length);
 
 			++packCounter;
 			++sprintPackCounter;

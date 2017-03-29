@@ -40,6 +40,9 @@ typedef  void (*pFunction)(void);
 // Assign default Chip ID
 uint8_t chipID;
 
+pFunction JumpToApplication;
+uint32_t JumpAddress;
+
 void initDevice();
 void deinitDevice();
 void jumpToUserApp();
@@ -48,12 +51,10 @@ void sendGenericMessage(BlGenericMessage* msg);
 
 void unlockFlash();
 void lockFlash();
-void writeByteToFlash(uint8_t data, uint32_t position);
-void writeMessageToFlash(uint8_t* data, uint32_t position);
+void clearUserAppFlash();
+void writeMessageToFlash(uint8_t* data, uint32_t position, uint8_t length);
 
 uint64_t getDeviceId();
-
-void handleNewMessage();
 
 /**
  * Helper functions

@@ -7,6 +7,8 @@
 
 #include "link_layer.h"
 #include "can.h"
+#include "stm32f4xx_hal.h"
+
 
 
 #define GTBL_STM32Addr_UUIDHigh		(uint32_t*) 0x1FFF7A18		//32bit
@@ -14,7 +16,7 @@
 #define GTBL_STM32Addr_UUIDLow		(uint32_t*) 0x1FFF7A10		//32bit
 #define GTBL_STM32Addr_FlashSize	(uint32_t*) 0x1FFF7A22		//16bit
 
-#define GTBL_AppStartAddress	0x08200000
+#define GTBL_AppStartAddress	0x08010000
 #define	GTBL_AppLen				960			//KByte
 #define GTBL_AppEndAddress		GTBL_AppStartAddress + GTBL_AppLen -4
 
@@ -63,8 +65,16 @@ void sendGenericMessage(BlGenericMessage* msg)
  */
 void unlockFlash()
 {
-	// TODO: Does this have to be done before every byte or just once before flash operation starts?
-	// Do I need to clear the flash before "flashing" the new programm?
+	HAL_FLASH_Unlock();
+}
+
+void clearUserAppFlash()
+{
+	uint32_t bank;
+	for(bank = 4; bank <= 11; ++bank)
+	{
+		FLASH_MassErase(FLASH_VOLTAGE_RANGE_3, bank);
+	}
 }
 
 /**
@@ -72,17 +82,7 @@ void unlockFlash()
  */
 void lockFlash()
 {
-	// TODO: Really necessary or just hw reset?
-}
-
-/**
- * Writes a single byte to the flash memory
- * @param data: The data to be written to the flash memory
- * @param position: The byte position in flash
- */
-void writeByteToFlash(uint8_t data, uint32_t position)
-{
-	// TODO
+	HAL_FLASH_Lock();
 }
 
 /**
@@ -90,18 +90,28 @@ void writeByteToFlash(uint8_t data, uint32_t position)
  * @param data: The data to be written to the flash memory
  * @param position: The byte position (start) in flash
  */
-void writeMessageToFlash(uint8_t* data, uint32_t position)
+void writeMessageToFlash(uint8_t* data, uint32_t position, uint8_t length)
 {
-	// TODO
-}
+	uint32_t flashBuffer;
+	uint8_t i;
+	uint8_t j;
 
-void handleNewMessage()
-{
-
+	if(length != 0)
+	{
+		for(i = 0; i < ((length-1/4) + 1); ++ i)
+		{
+			flashBuffer = 0;
+			for(j = 0; j < 4; ++i)
+			{
+				flashBuffer |= data[j] << (j*8);
+			}
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, position + i, flashBuffer);
+		}
+	}
 }
 
 /**
- * Jumps to the start of the user application after deinitializing interrupts.
+ * Jumps to the start of the user application after deinit interrupts.
  */
 void jumpToUserApp(void) {
 
@@ -138,14 +148,14 @@ void jumpToUserApp(void) {
 	//if ((*(__IO uint32_t*)GTBL_AppStartAddress) == BL_UAStartPattern)
 	{
 		// point to application reset handler (APPLICATION_ADDRESS +4 bytes)
-		/*JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
+		JumpAddress = *(__IO uint32_t*) (GTBL_AppStartAddress + 4);
 		JumpToApplication = (pFunction) JumpAddress;
 
 		// update main stack pointer (MSP) register value
 		__set_MSP(*(__IO uint32_t*) GTBL_AppStartAddress);
 
 		// execute application code
-		JumpToApplication();*/
+		JumpToApplication();
 	}
 }
 
