@@ -213,7 +213,7 @@ void CAN1_RX0_IRQHandler(void)
 	  msg.commandId = ((messageRx.ExtId >> 12) & 0xFF);
   }
   uint8_t i;
-  for(i = 0; i < 8; ++i)
+  for(i = 0; i < 8; i++)
   {
 	  if(i < msg.length)
 		  msg.data[i] = messageRx.Data[i];

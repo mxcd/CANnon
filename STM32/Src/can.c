@@ -71,7 +71,7 @@ void can1SendStd(uint8_t* data, uint8_t length, uint32_t id)
 	hcan1.pTxMsg->DLC = length;
 
 	uint8_t i;
-	for(i = 0; i < length; ++i)
+	for(i = 0; i < length; i++)
 	{
 		hcan1.pTxMsg->Data[i] = data[i];
 	}
@@ -94,7 +94,7 @@ void can1SendExt(uint8_t* data, uint8_t length, uint32_t id)
 	hcan1.pTxMsg->DLC = length;
 
 	uint8_t i;
-	for(i = 0; i < length; ++i)
+	for(i = 0; i < length; i++)
 	{
 		hcan1.pTxMsg->Data[i] = data[i];
 	}
@@ -120,7 +120,7 @@ void can1InitFilterMask()
 	CAN_FilterConfTypeDef canFilter;
 	canFilter.FilterIdHigh = (CHIP_ID << 7);
 	canFilter.FilterIdLow = 0x0000;
-	canFilter.FilterMaskIdHigh = 0x0FF0;
+	canFilter.FilterMaskIdHigh = 0x7F80;
 	canFilter.FilterMaskIdLow = 0x0000;
 	canFilter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
 	canFilter.FilterNumber = 0;

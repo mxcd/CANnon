@@ -70,11 +70,30 @@ void unlockFlash()
 
 void clearUserAppFlash()
 {
-	uint32_t bank;
-	for(bank = 4; bank <= 11; ++bank)
-	{
-		FLASH_MassErase(FLASH_VOLTAGE_RANGE_3, bank);
-	}
+	FLASH_EraseInitTypeDef eraseDef;
+	eraseDef.TypeErase = TYPEERASE_SECTORS;
+	eraseDef.Sector = FLASH_SECTOR_4;
+	eraseDef.NbSectors = 8;
+	eraseDef.VoltageRange = VOLTAGE_RANGE_4;
+
+	uint32_t eraseOutput;
+
+	HAL_FLASHEx_Erase(&eraseDef, &eraseOutput);
+	//uint8_t bank;
+	//for(bank = 4; bank <= 11; bank++)
+	//{
+		/*while(READ_REG(0x0C)&0x1);
+
+		FLASH->CR &= 0xFFFFFC85;
+		FLASH->CR |= (bank<<3);
+		FLASH->CR |= 2;
+		FLASH->CR |= (1<<16);
+		*/
+		//HAL_Delay(10);
+		//while(READ_REG(0x0C)&0x1);
+		//FLASH_Erase_Sector(bank, FLASH_VOLTAGE_RANGE_3);
+	//}
+	//while(READ_REG(0x0C)&0x1);
 }
 
 /**
@@ -98,14 +117,25 @@ void writeMessageToFlash(uint8_t* data, uint32_t position, uint8_t length)
 
 	if(length != 0)
 	{
-		for(i = 0; i < ((length-1/4) + 1); ++ i)
+		// Code for 32 Bit addressing
+		/*for(i = 0; i < ((length-1/4) + 1); ++ i)
 		{
 			flashBuffer = 0;
 			for(j = 0; j < 4; ++i)
 			{
 				flashBuffer |= data[j] << (j*8);
 			}
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, position + i, flashBuffer);
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i, flashBuffer);
+		}*/
+
+		for(i = 0; i < ((length-1/4) + 1); i++)
+		{
+			flashBuffer = 0;
+			for(j = 0; j < 4; j++)
+			{
+				flashBuffer |= data[j] << (j*8);
+			}
+			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i*4, flashBuffer);
 		}
 	}
 }

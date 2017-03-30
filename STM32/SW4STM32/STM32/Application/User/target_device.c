@@ -116,6 +116,8 @@ void initFlashMode()
 		bootMenu = false;
 		unlockFlash();
 		clearUserAppFlash();
+		sendAck();
+		//lockFlash();
 	}
 	else
 	{
@@ -283,7 +285,7 @@ void sendChipId()
 	msg.targetDeviceId = chipID;
 
 	uint8_t i;
-	for(i = 0; i < 8; ++i)
+	for(i = 0; i < 8; i++)
 	{
 		msg.data[i] = devId >> (i*8);
 	}
@@ -295,6 +297,8 @@ void sendChipId()
  */
 void startApplication()
 {
+	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
 	deinitDevice();
 	jumpToUserApp();
 }
@@ -316,7 +320,7 @@ void tryToWriteFlash(BlGenericMessage* msg)
 			sprintFlags |= (1<<sprintPosition);
 
 			// Write pack to flash, calculating CRC alongside
-			writeMessageToFlash(msg->data, (packId*2), msg->length);
+			writeMessageToFlash(msg->data, (packId*8), msg->length);
 
 			++packCounter;
 			++sprintPackCounter;

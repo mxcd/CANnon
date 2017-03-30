@@ -41,6 +41,8 @@
 #include "link_layer.h"
 #include "target_device.h"
 
+#define BL_TIMEOUT 1000
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -81,30 +83,62 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
-
   /* USER CODE BEGIN 2 */
   initDevice();
-  sendStartupMessage();
 
 
+
+  uint32_t startTime = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  bool initBootMode = 0;
+  bool flashErased = 0;
+
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  HAL_GetTick();
 	  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 	  HAL_Delay(100);
 	  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 	  HAL_Delay(100);
-	  sendStartupMessage();
+
+	  if((HAL_GetTick() - startTime) > BL_TIMEOUT && !bootMenu)
+	  {
+		  sendStartupMessage();
+		  startApplication();
+	  }
+
+	  while(bootMenu)
+	  {
+		  if(!initBootMode)
+		  {
+			  initBootMode = 1;
+			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
+		  }
+		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+		  HAL_Delay(500);
+	  }
+
+	  while(flashMode)
+	  {
+		  if(!flashErased)
+		  {
+			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+			  flashErased = 1;
+		  }
+		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+		  HAL_Delay(200);
+	  }
   }
   /* USER CODE END 3 */
-
 }
 
 /** System Clock Configuration
