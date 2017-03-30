@@ -114,9 +114,6 @@ void initFlashMode()
 	{
 		flashMode = true;
 		bootMenu = false;
-		unlockFlash();
-		clearUserAppFlash();
-		sendAck();
 		//lockFlash();
 	}
 	else

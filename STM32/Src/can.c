@@ -118,7 +118,7 @@ void can1InitFilterMask()
 	// [28:21][20:13]||[12:5][4:0 IDE RTR 0]
 	// 0000 0000 0000 0000 || 0000 0000 0000 0000
 	CAN_FilterConfTypeDef canFilter;
-	canFilter.FilterIdHigh = (CHIP_ID << 7);
+	canFilter.FilterIdHigh = (chipID << 7);
 	canFilter.FilterIdLow = 0x0000;
 	canFilter.FilterMaskIdHigh = 0x7F80;
 	canFilter.FilterMaskIdLow = 0x0000;

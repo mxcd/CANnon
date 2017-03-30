@@ -74,7 +74,7 @@ void clearUserAppFlash()
 	eraseDef.TypeErase = TYPEERASE_SECTORS;
 	eraseDef.Sector = FLASH_SECTOR_4;
 	eraseDef.NbSectors = 8;
-	eraseDef.VoltageRange = VOLTAGE_RANGE_4;
+	eraseDef.VoltageRange = VOLTAGE_RANGE_3;
 
 	uint32_t eraseOutput;
 

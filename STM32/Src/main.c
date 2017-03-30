@@ -108,7 +108,7 @@ int main(void)
 
 	  if((HAL_GetTick() - startTime) > BL_TIMEOUT && !bootMenu)
 	  {
-		  sendStartupMessage();
+		  //sendStartupMessage();
 		  startApplication();
 	  }
 
@@ -132,6 +132,9 @@ int main(void)
 			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
 			  flashErased = 1;
+			  unlockFlash();
+			  clearUserAppFlash();
+			  sendAck();
 		  }
 		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
