@@ -128,12 +128,12 @@ void writeMessageToFlash(uint8_t* data, uint32_t position, uint8_t length)
 			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i, flashBuffer);
 		}*/
 
-		for(i = 0; i < ((length-1/4) + 1); i++)
+		for(i = 0; i < (((length-1)/4) + 1); i++)
 		{
 			flashBuffer = 0;
 			for(j = 0; j < 4; j++)
 			{
-				flashBuffer |= data[j] << (j*8);
+				flashBuffer |= data[j+(i*4)] << (j*8);
 			}
 			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i*4, flashBuffer);
 		}

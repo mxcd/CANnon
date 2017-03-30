@@ -153,12 +153,12 @@ void startFlashing(BlGenericMessage* msg)
 			inFlashProcess = true;
 			uint8_t i;
 			uint64_t data = 0;
-			for(i = 0; i < 8; ++i)
+			for(i = 0; i < msg->length; ++i)
 			{
 				data += msg->data[i] << (i*8);
 			}
 			packCount = data & 0xFFFFF;
-			sprintPackCount = (data>>20) & 0xFF;
+			sprintPackCount = (data>>24) & 0xFF;
 			packCounter = 0;
 			sprintPackCounter = 0;
 			sprintFlags = 0;
@@ -213,22 +213,21 @@ void sendError(uint8_t errCode)
 void checkSprint()
 {
 	// Check if all required packs arrived
-	if(sprintPackCount == sprintPackCounter)
+	bool complete =  (sprintFlags & ((1u << sprintPackCount) - 1)) == (1u << sprintPackCount) - 1;
+
+	if(complete && sprintPackCount == sprintPackCounter)
 	{
-		bool complete =  (sprintFlags & ((1u << sprintPackCount) - 1)) == (1u << sprintPackCount) - 1;
-		if(complete)
-		{
-			sendAck();
-			sprintFlags = 0;
-			sprintPackCount = 0;
-		}
-		else
-		{
-			sendNack(sprintFlags);
-		}
+		// If yes: Send ACK
+		sendAck();
+		sprintFlags = 0;
+		sprintPackCounter = 0;
+
 	}
-	// If yes: Send ACK
-	// If no: Send NACK with bit array of received packs
+	else
+	{
+		// If no: Send NACK with bit array of received packs
+		sendNack(sprintFlags);
+	}
 }
 
 void sendAck()
