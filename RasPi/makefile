@@ -24,7 +24,7 @@
 all : cannon
 
 clean :
-	rm *.o cantest
+	rm *.o
 
 cantest : lib.o cantest.o cannon.o
 	gcc -o cantest lib.o cantest.o cannon.o
