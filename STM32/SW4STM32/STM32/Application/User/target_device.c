@@ -217,6 +217,7 @@ void checkSprint()
 
 	if(complete && sprintPackCount == sprintPackCounter)
 	{
+		HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 		// If yes: Send ACK
 		sendAck();
 		sprintFlags = 0;
@@ -308,6 +309,7 @@ void tryToWriteFlash(BlGenericMessage* msg)
 	{
 		if(inFlashProcess)
 		{
+			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 			// Process flash pack
 			uint32_t packId = msg->flashPackId;					// global id of the pack
 			uint8_t sprintPosition = packId % sprintPackCount;	// position of pack in sprint

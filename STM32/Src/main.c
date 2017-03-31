@@ -41,7 +41,7 @@
 #include "link_layer.h"
 #include "target_device.h"
 
-#define BL_TIMEOUT 1000
+#define BL_TIMEOUT 5000
 
 /* USER CODE END Includes */
 
@@ -96,6 +96,8 @@ int main(void)
   bool initBootMode = 0;
   bool flashErased = 0;
 
+  sendAck();
+
   while (1)
   {
   /* USER CODE END WHILE */
@@ -109,6 +111,7 @@ int main(void)
 	  if((HAL_GetTick() - startTime) > BL_TIMEOUT && !bootMenu)
 	  {
 		  //sendStartupMessage();
+		  sendAck();
 		  startApplication();
 	  }
 
@@ -136,9 +139,12 @@ int main(void)
 			  clearUserAppFlash();
 			  sendAck();
 		  }
-		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-		  HAL_Delay(200);
+		  if(!inFlashProcess)
+		  {
+			  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+			  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+			  HAL_Delay(100);
+		  }
 	  }
   }
   /* USER CODE END 3 */

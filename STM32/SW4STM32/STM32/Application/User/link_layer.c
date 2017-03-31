@@ -194,7 +194,8 @@ uint64_t getDeviceId()
 	uint64_t devId;
 	devId = (uint64_t) *GTBL_STM32Addr_UUIDLow;
 	devId += ((uint64_t)*GTBL_STM32Addr_UUIDMid) << 32;
-	return devId;
+	//return devId;
+	return CHIP_ID;
 }
 
 void setChipId()
