@@ -31,6 +31,18 @@ int main(int argc, char **argv)
 			printf("Doing broadcast ping...\n");
 			doBroadcastPing();
 		}
+		else if(strcmp("peek",argv[1]) == 0)
+		{
+			printf("Listening on CAN bus\n");
+			while(1)
+			{
+				if(canAvailable())
+				{
+					receiveMessage();
+				}
+				usleep(500);
+			}
+		}
 	}
 	else if(argc == 3)
 	{
@@ -65,32 +77,64 @@ void doBroadcastPing()
 
 void doFlash(char* file, char* device)
 {
+	int i, j;
+	int packsPerSprint = 64;
+
 	int deviceId = strtol(device, NULL, 0);
 	printf("Flashing file %s on device %i\n", file, deviceId);
 
 	int size = getFileSize(file);
-
-	sendSignalMessage(deviceId, INTERRUPT_ID);
 	char* binArray = readFile(file);
 
-	printf("Waiting for flash to be erased");
-	sendSignalMessage(deviceId, INIT_FLASH_ID);
-	int i;
-	for(i = 0; i < 10; ++i)
+	printf("Waiting for interrupt to be confirmed\n");
+	// Wait for InterruptConfirm
+	bool nack = true;
+	while(nack)
 	{
-		waitFor(1);
-		printf(".");
+		sendSignalMessage(deviceId, INTERRUPT_ID);
+		if(canAvailable())
+		{
+			BlGenericMessage msg = receiveGenericMessage();
+			//printf("Received msg: ID:%x TDI:%x\n", msg.commandId, msg.targetDeviceId);
+			if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
+			{
+				nack = false;
+				break;
+			}
+		}
+		usleep(100000);
 	}
+
+	printf("Waiting for flash to be erased... \n");
+	sendSignalMessage(deviceId, INIT_FLASH_ID);
+
+	nack = true;
+	while(nack)
+	{
+		if(canAvailable())
+		{
+			BlGenericMessage msg = receiveGenericMessage();
+			if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
+			{
+				nack = false;
+				break;
+			}
+		}
+		usleep(100000);
+	}
+
 	printf("done\n");
 	usleep(50000);
-	startFlashing(deviceId, 64, size);
-	usleep(10000);
 
+	startFlashing(deviceId, packsPerSprint, size);
+	usleep(50000);
+
+	int sprintBasePack = 0;
 
 	for(i = 0; i < size/8; ++i)
 	{
 		usleep(500);
-		int j;
+
 		char pack[8];
 		for(j = 0; j < 8; ++j)
 		{
@@ -98,11 +142,52 @@ void doFlash(char* file, char* device)
 		}
 		sendFlashPack(deviceId, i, pack, 8);
 
-		if(i != 0 && i%64 == 63)
+		if(i != 0 && i%packsPerSprint == packsPerSprint-1)
 		{
-			printf("Sprint %i\n", i/64);
+			printf("Sprint %i\n", i/packsPerSprint);
 			usleep(500);
 			sendSignalMessage(deviceId, ACK_REQUEST_ID);
+
+			nack = true;
+			while(nack)
+			{
+				if(canAvailable())
+				{
+					BlGenericMessage msg = receiveGenericMessage();
+					if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
+					{
+						nack = false;
+						break;
+					}
+					else if(msg.targetDeviceId == deviceId && msg.commandId == NACK_ID)
+					{
+						int k;
+						long sprintFlags = 0;
+						for(k = 0; k < msg.length; ++k)
+						{
+							sprintFlags += msg.data[k] << (k*8);
+						}
+
+						for(k = 0; k < packsPerSprint; ++k)
+						{
+							if(!((sprintFlags>>k)&0x1))
+							{
+								printf("Resending pack %i\n", sprintBasePack + k);
+								for(j = 0; j < 8; ++j)
+								{
+									pack[j] = binArray[sprintBasePack + k + j];
+								}
+								sendFlashPack(deviceId, sprintBasePack + k, pack, 8);
+								usleep(500);
+							}
+						}
+						sendSignalMessage(deviceId, ACK_REQUEST_ID);
+						usleep(500);
+					}
+				}
+				usleep(100000);
+			}
+			sprintBasePack = i+1;
 		}
 	}
 
@@ -119,11 +204,13 @@ void doFlash(char* file, char* device)
 		}
 		sendFlashPack(deviceId, size/8, pack, remainder);
 	}
-
+	// TODO: add ACK check on end
 	printf("loading done");
 
 	sendSignalMessage(deviceId, END_FLASH_ID);
+	usleep(500);
 	sendSignalMessage(deviceId, EXIT_FLASH_ID);
+	usleep(500);
 	sendSignalMessage(deviceId, START_APP_ID);
 }
 

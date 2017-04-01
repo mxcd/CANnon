@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Sending CANnon project to Pi"
+
+rsync -arvze ssh ./*.c max@10.26.2.237:CANnon/
+rsync -arvze ssh *rsync -arvze ssh ./Makefile max@10.26.2.237:CANnon/ max@10.26.2.237:CANnon/
+rsync -arvze ssh ./makefile max@10.26.2.237:CANnon/
+rsync -arvze ssh ./Makefile max@10.26.2.237:CANnon/
+rsync -arvze ssh ./Makefile max@10.26.2.237:CANnon/
+
+
+echo "Running make file"
+ssh max@10.26.2.237 "cd /home/max/CANnon && make"

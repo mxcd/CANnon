@@ -5,15 +5,35 @@
  *      Author: max
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <string.h>
+#include <signal.h>
+#include <ctype.h>
+#include <libgen.h>
+#include <time.h>
+
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/uio.h>
+#include <net/if.h>
+
+#include <linux/can.h>
+#include <linux/can/raw.h>
+
+#include "lib.h"
+
 #include "CanMessage.h"
 #include "CanInterface.h"
-#include <stdbool.h>
+
+
 
 void initCanInterface()
 {
-	struct sockaddr_can addr;
-	struct ifreq ifr;
-
 	/* open socket */
 	if ((baseSocket = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
 	{
@@ -29,22 +49,95 @@ void initCanInterface()
 	}
 	addr.can_ifindex = ifr.ifr_ifindex;
 
-	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, NULL, 0);
+	//struct can_filter *rfilter;
+	//rfilter = malloc(sizeof(struct can_filter));
+	struct can_filter rfilter;
+	rfilter.can_id = CAN_EFF_FLAG;
+	rfilter.can_mask = CAN_EFF_FLAG;
+
+	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(struct can_filter));
+
+	//free(rfilter);
 
 	if (bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		perror("bind");
 	}
+
+	iov.iov_base = &frame;
+	msg.msg_name = &addr;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_control = &ctrlmsg;
 }
 
-bool available()
+bool canAvailable()
 {
-	return false;
+	FD_ZERO(&rdfs);
+	FD_SET(baseSocket, &rdfs);
+	return (FD_ISSET(baseSocket, &rdfs));
 }
 
 CanMessage receiveMessage()
 {
-	CanMessage msg;
+	int nbytes, i;
+	int count = 0;
+	struct cmsghdr *cmsg;
+
+	CanMessage cMsg;
+
+	FD_ZERO(&rdfs);
+	FD_SET(baseSocket, &rdfs);
+	if(FD_ISSET(baseSocket, &rdfs))
+	{
+		int idx;
+
+		/* these settings may be modified by recvmsg() */
+		iov.iov_len = sizeof(frame);
+		msg.msg_namelen = sizeof(addr);
+		msg.msg_controllen = sizeof(ctrlmsg);
+		msg.msg_flags = 0;
+
+		recvmsg(baseSocket, &msg, 0);
+
+		for (cmsg = CMSG_FIRSTHDR(&msg);
+			 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
+			 cmsg = CMSG_NXTHDR(&msg,cmsg)) {
+		}
+
+
+		//idx = idx2dindex(addr.can_ifindex, &addr);
+
+
+		for(i = 0; i < frame.can_dlc; ++i)
+		{
+			cMsg.data[i] = frame.data[i];
+		}
+		cMsg.dlc = frame.can_dlc;
+		cMsg.ext = true;
+		cMsg.id = frame.can_id;
+
+		printf("Received msg with id %lu\n", cMsg.id);
+	}
+
+	return cMsg;
+}
+
+BlGenericMessage receiveGenericMessage()
+{
+	CanMessage cMsg = receiveMessage();
+	BlGenericMessage msg;
+
+	msg.FOF = ((cMsg.id>>28)&0x1);
+	msg.commandId = (cMsg.id>>12)&0xFF;
+	msg.targetDeviceId = (cMsg.id>>20)&0xFF;
+	msg.length = cMsg.dlc;
+	int i;
+	for(i = 0; i < msg.length; ++i)
+	{
+		msg.data[i] = cMsg.data[i];
+	}
+
 	return msg;
 }
 

@@ -96,7 +96,7 @@ int main(void)
   bool initBootMode = 0;
   bool flashErased = 0;
 
-  sendAck();
+  //sendAck();
 
   while (1)
   {
@@ -119,6 +119,7 @@ int main(void)
 	  {
 		  if(!initBootMode)
 		  {
+			  sendAck();
 			  initBootMode = 1;
 			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
 			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
