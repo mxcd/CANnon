@@ -33,7 +33,7 @@
 #define SEND_CRC_ID			0x0E // OUTGOING   -->
 #define START_FLASH_ID		0x0F // INCOMING <--
 #define END_FLASH_ID		0x10 // INCOMING <--
-#define ERROR_ID			0x11 // OUTGOING   -->
+#define STATUS_ID			0x11 // OUTGOING   -->
 #define GET_CHIP_ID			0x12 // INCOMING <--
 #define SEND_CHIP_ID		0x13 // Outgoing   -->
 #define START_APP_ID		0xFF // INCOMING <--
@@ -49,6 +49,15 @@
 #define ERRCODE_NOT_IN_FLASH_MODE 		2U
 #define ERRCODE_NOT_IN_BOOT_MENU		3U
 #define ERRCODE_ALREADY_FLASHING		4U
+#define STATUS_IN_BOOT_MENU				5U
+#define STATUS_START_ERASE				6U
+#define STATUS_ERASE_FINISHED			7U
+#define STATUS_FLASH_START				8U
+#define STATUS_FLASH_DONE				9U
+#define STATUS_STARTING_APP				10U
+/*
+ * Error Codes end
+ */
 
 /**
  * Private Variables
@@ -76,7 +85,7 @@ void initFlashMode();
 void exitFlashMode();
 void startFlashing(BlGenericMessage* msg);
 void stopFlashing();
-void sendError(uint8_t errCode);
+void sendStatus(uint8_t statusCode);
 void checkSprint();
 void sendCRC();
 void sendChipId();

@@ -29,6 +29,7 @@
 
 #include "CanMessage.h"
 #include "CanInterface.h"
+#include "config.h"
 
 
 
@@ -98,7 +99,7 @@ CanMessage receiveMessage()
 		msg.msg_controllen = sizeof(ctrlmsg);
 		msg.msg_flags = 0;
 
-		recvmsg(baseSocket, &msg, 0);
+		recvmsg(baseSocket, &msg, MSG_DONTWAIT);
 
 		for (cmsg = CMSG_FIRSTHDR(&msg);
 			 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
@@ -117,7 +118,7 @@ CanMessage receiveMessage()
 		cMsg.ext = true;
 		cMsg.id = frame.can_id;
 
-		printf("Received msg with id %lu\n", cMsg.id);
+		//printf("Received msg with id %lu\n", cMsg.id);
 	}
 
 	return cMsg;
@@ -137,6 +138,44 @@ BlGenericMessage receiveGenericMessage()
 	{
 		msg.data[i] = cMsg.data[i];
 	}
+
+	if(__VERBOSE)
+		if(msg.commandId == STATUS_ID)
+		{
+			switch(msg.data[0])
+			{
+			case ERRCODE_NO_FLASH_PROCESS:
+				printf("Error: No flashing in process!\n");
+				break;
+			case ERRCODE_NOT_IN_FLASH_MODE:
+				printf("Error: Not in flash mode\n");
+				break;
+			case ERRCODE_NOT_IN_BOOT_MENU:
+				printf("Error: Not in boot menu\n");
+				break;
+			case ERRCODE_ALREADY_FLASHING:
+				printf("Error: Already flashing\n");
+				break;
+			case STATUS_IN_BOOT_MENU:
+				printf("Status: Entering boot menu\n");
+				break;
+			case STATUS_START_ERASE:
+				printf("Status: Starting flash erase\n");
+				break;
+			case STATUS_ERASE_FINISHED:
+				printf("Status: Flash erase finished\n");
+				break;
+			case STATUS_FLASH_START:
+				printf("Status: Starting flashing\n");
+				break;
+			case STATUS_FLASH_DONE:
+				printf("Status: Flashing done\n");
+				break;
+			case STATUS_STARTING_APP:
+				printf("Status: Starting user app\n");
+				break;
+			}
+		}
 
 	return msg;
 }

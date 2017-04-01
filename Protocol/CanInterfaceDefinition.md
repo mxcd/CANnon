@@ -69,7 +69,7 @@ The target device ID is immutable per communication, meaning that the same targe
 | 0x0E  |Send Flash CRC           |  2|2 Byte CRC checksum
 | 0x0F  |Start flash process      |  8|Packs per Sprint (8 Bit) / Total Number of Packs (20 Bit)
 | 0x10  |End flash process        |  0|
-| 0x11  |Error message            |  1|Error Code
+| 0x11  |Status message           |  1|Status Code
 | 0x12  |Get chip id              |  0|
 | 0x13  |Send chip id             |  8|64 Bit chip id
 | 0xFF  |Start user application   |  0|

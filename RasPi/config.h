@@ -29,7 +29,7 @@
 #define SEND_CRC_ID			0x0E // INCOMING <--
 #define START_FLASH_ID		0x0F // OUTGOING   -->
 #define END_FLASH_ID		0x10 // OUTGOING   -->
-#define ERROR_ID			0x11 // INCOMING <--
+#define STATUS_ID			0x11 // INCOMING <--
 #define GET_CHIP_ID			0x12 // OUTGOING   -->
 #define SEND_CHIP_ID		0x13 // INCOMING <--
 #define START_APP_ID		0xFF // OUTGOING   -->
@@ -37,8 +37,25 @@
  * Command ID defines end
  */
 
+/**
+ * Error Codes
+ */
+#define ERRCODE_OK 						0U
+#define ERRCODE_NO_FLASH_PROCESS 		1U
+#define ERRCODE_NOT_IN_FLASH_MODE 		2U
+#define ERRCODE_NOT_IN_BOOT_MENU		3U
+#define ERRCODE_ALREADY_FLASHING		4U
+#define STATUS_IN_BOOT_MENU				5U
+#define STATUS_START_ERASE				6U
+#define STATUS_ERASE_FINISHED			7U
+#define STATUS_FLASH_START				8U
+#define STATUS_FLASH_DONE				9U
+#define STATUS_STARTING_APP				10U
+/*
+ * Error Codes end
+ */
+
 #define CANNON_DEVICE_ID 42U
-
-
+#define __VERBOSE 0
 
 #endif /* CONFIG_H_ */

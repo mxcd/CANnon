@@ -73,6 +73,8 @@ void processBlMessage(BlGenericMessage* msg)
  */
 void sendPingResponse(BlGenericMessage* msg)
 {
+	msg->commandId = PING_RESPONSE_ID;
+	msg->targetDeviceId = chipID;
 	msg->data[1] = chipID;
 	msg->length = 2;
 	sendGenericMessage(msg);
@@ -84,6 +86,7 @@ void sendPingResponse(BlGenericMessage* msg)
 void enterBootMenu()
 {
 	// TODO send message to signal entering boot menu
+	sendStatus(STATUS_IN_BOOT_MENU);
 	bootMenu = true;
 	flashMode = false;
 	inFlashProcess = false;
@@ -119,7 +122,7 @@ void initFlashMode()
 	else
 	{
 		// Trying to go in flash mode without being in boot menu -> ERROR
-		sendError(ERRCODE_NOT_IN_BOOT_MENU);
+		sendStatus(ERRCODE_NOT_IN_BOOT_MENU);
 	}
 }
 
@@ -137,7 +140,7 @@ void exitFlashMode()
 	else
 	{
 		// Trying to leave flash mode without being in flash mode -> ERROR
-		sendError(ERRCODE_NOT_IN_FLASH_MODE);
+		sendStatus(ERRCODE_NOT_IN_FLASH_MODE);
 	}
 }
 
@@ -150,6 +153,7 @@ void startFlashing(BlGenericMessage* msg)
 	{
 		if(!inFlashProcess)
 		{
+			sendStatus(STATUS_FLASH_START);
 			inFlashProcess = true;
 			uint8_t i;
 			uint64_t data = 0;
@@ -166,13 +170,13 @@ void startFlashing(BlGenericMessage* msg)
 		else
 		{
 			// Already in flash process -> ERROR
-			sendError(ERRCODE_ALREADY_FLASHING);
+			sendStatus(ERRCODE_ALREADY_FLASHING);
 		}
 	}
 	else
 	{
 		// Trying to start flash process without being in flash mode -> ERROR
-		sendError(ERRCODE_NOT_IN_FLASH_MODE);
+		sendStatus(ERRCODE_NOT_IN_FLASH_MODE);
 	}
 }
 
@@ -184,23 +188,24 @@ void stopFlashing()
 	if(inFlashProcess)
 	{
 		inFlashProcess = false;
+		sendStatus(STATUS_FLASH_DONE);
 	}
 	else
 	{
 		// Trying to stop the flash process without being in flash process -> ERROR
-		sendError(ERRCODE_NO_FLASH_PROCESS);
+		sendStatus(ERRCODE_NO_FLASH_PROCESS);
 	}
 }
 
 /**
  * Sends out and error message with defined error code
  */
-void sendError(uint8_t errCode)
+void sendStatus(uint8_t statusCode)
 {
 	BlGenericMessage msg;
 	msg.FOF = 0;
-	msg.commandId = ERROR_ID;
-	msg.data[0] = errCode;
+	msg.commandId = STATUS_ID;
+	msg.data[0] = statusCode;
 	msg.flashPackId = 0;
 	msg.length = 1;
 	msg.targetDeviceId = chipID;
@@ -294,6 +299,7 @@ void sendChipId()
  */
 void startApplication()
 {
+	sendStatus(STATUS_STARTING_APP);
 	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
 	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
 	deinitDevice();
@@ -326,12 +332,12 @@ void tryToWriteFlash(BlGenericMessage* msg)
 		else
 		{
 			// Trying to write flash without being in flash process -> ERROR
-			sendError(ERRCODE_NO_FLASH_PROCESS);
+			sendStatus(ERRCODE_NO_FLASH_PROCESS);
 		}
 	}
 	else
 	{
 		// Trying to write flash without being in flash mode -> ERROR
-		sendError(ERRCODE_NOT_IN_FLASH_MODE);
+		sendStatus(ERRCODE_NOT_IN_FLASH_MODE);
 	}
 }

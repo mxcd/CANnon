@@ -41,7 +41,7 @@
 #include "link_layer.h"
 #include "target_device.h"
 
-#define BL_TIMEOUT 5000
+#define BL_TIMEOUT 1000
 
 /* USER CODE END Includes */
 
@@ -135,10 +135,11 @@ int main(void)
 		  {
 			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+			  sendStatus(STATUS_START_ERASE);
 			  flashErased = 1;
 			  unlockFlash();
 			  clearUserAppFlash();
-			  sendAck();
+			  sendStatus(STATUS_ERASE_FINISHED);
 		  }
 		  if(!inFlashProcess)
 		  {

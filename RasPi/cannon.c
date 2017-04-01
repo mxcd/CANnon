@@ -25,11 +25,29 @@ int main(int argc, char **argv)
 	}
 	else if(argc == 2)
 	{
-		printf("Got one args\n");
+		if(__VERBOSE)
+			printf("Got one args\n");
 		if(strcmp("ping",argv[1]) == 0)
 		{
 			printf("Doing broadcast ping...\n");
+			int startTime = clock();
+
+			if(__VERBOSE)
+				printf("Start time: %i\n", startTime);
+
 			doBroadcastPing();
+			while(clock()-startTime < 3000)
+			{
+				if(canAvailable())
+				{
+					BlGenericMessage msg = receiveGenericMessage();
+					if(msg.commandId == PING_RESPONSE_ID)
+					{
+						int pingTime = clock() - startTime;
+						printf("Found device ID %i after %i ms", msg.targetDeviceId, pingTime);
+					}
+				}
+			}
 		}
 		else if(strcmp("peek",argv[1]) == 0)
 		{
@@ -38,7 +56,14 @@ int main(int argc, char **argv)
 			{
 				if(canAvailable())
 				{
-					receiveMessage();
+					BlGenericMessage msg = receiveGenericMessage();
+					printf("%i \t-> %i : %i[", clock(), msg.targetDeviceId, msg.FOF, msg.length);
+					int i;
+					for(i = 0; i < msg.length; ++i)
+					{
+						printf("%i ", msg.data[i]);
+					}
+					printf("]\n");
 				}
 				usleep(500);
 			}
@@ -54,10 +79,10 @@ int main(int argc, char **argv)
 	}
 	else if(argc == 4)
 	{
-		printf("Got three args\n");
+		if(__VERBOSE)
+			printf("Got three args\n");
 		if(strcmp("flash", argv[1]) ==0)
 		{
-			printf("Doing flash\n");
 			doFlash(argv[2], argv[3]);
 		}
 	}
@@ -86,48 +111,62 @@ void doFlash(char* file, char* device)
 	int size = getFileSize(file);
 	char* binArray = readFile(file);
 
-	printf("Waiting for interrupt to be confirmed\n");
+	printf("Waiting for interrupt to be confirmed");
+	fflush(stdout);
 	// Wait for InterruptConfirm
 	bool nack = true;
 	while(nack)
 	{
+		printf(".");
+		fflush(stdout);
 		sendSignalMessage(deviceId, INTERRUPT_ID);
 		if(canAvailable())
 		{
 			BlGenericMessage msg = receiveGenericMessage();
+
 			//printf("Received msg: ID:%x TDI:%x\n", msg.commandId, msg.targetDeviceId);
-			if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
+			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_IN_BOOT_MENU)
 			{
 				nack = false;
+				printf(" ok\n");
+				fflush(stdout);
 				break;
 			}
 		}
-		usleep(100000);
+		usleep(250000);
 	}
 
-	printf("Waiting for flash to be erased... \n");
+	usleep(500000);
+	printf("Waiting for flash to be erased");
+	fflush(stdout);
+
 	sendSignalMessage(deviceId, INIT_FLASH_ID);
 
 	nack = true;
 	while(nack)
 	{
+		printf(".");
+		fflush(stdout);
 		if(canAvailable())
 		{
 			BlGenericMessage msg = receiveGenericMessage();
-			if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
+			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_ERASE_FINISHED)
 			{
 				nack = false;
+				printf(" ok\n");
+				fflush(stdout);
 				break;
 			}
 		}
-		usleep(100000);
+		usleep(500000);
 	}
 
-	printf("done\n");
 	usleep(50000);
 
 	startFlashing(deviceId, packsPerSprint, size);
 	usleep(50000);
+	printf("Flashing");
+	fflush(stdout);
 
 	int sprintBasePack = 0;
 
@@ -144,7 +183,11 @@ void doFlash(char* file, char* device)
 
 		if(i != 0 && i%packsPerSprint == packsPerSprint-1)
 		{
-			printf("Sprint %i\n", i/packsPerSprint);
+			if(__VERBOSE)
+				printf("Sprint %i\n", i/packsPerSprint);
+			else
+				printf(".");
+			fflush(stdout);
 			usleep(500);
 			sendSignalMessage(deviceId, ACK_REQUEST_ID);
 
@@ -172,7 +215,8 @@ void doFlash(char* file, char* device)
 						{
 							if(!((sprintFlags>>k)&0x1))
 							{
-								printf("Resending pack %i\n", sprintBasePack + k);
+								printf("\nResending pack %i\n", sprintBasePack + k);
+								fflush(stdout);
 								for(j = 0; j < 8; ++j)
 								{
 									pack[j] = binArray[sprintBasePack + k + j];
@@ -205,13 +249,35 @@ void doFlash(char* file, char* device)
 		sendFlashPack(deviceId, size/8, pack, remainder);
 	}
 	// TODO: add ACK check on end
-	printf("loading done");
+	printf(" done\n");
 
+	usleep(500000);
 	sendSignalMessage(deviceId, END_FLASH_ID);
 	usleep(500);
 	sendSignalMessage(deviceId, EXIT_FLASH_ID);
 	usleep(500);
 	sendSignalMessage(deviceId, START_APP_ID);
+	printf("starting user app");
+
+	nack = true;
+	while(nack)
+	{
+		printf(".");
+		fflush(stdout);
+		if(canAvailable())
+		{
+			BlGenericMessage msg = receiveGenericMessage();
+			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_STARTING_APP)
+			{
+				nack = false;
+				printf(" ok\n");
+				fflush(stdout);
+				break;
+			}
+		}
+		usleep(100000);
+	}
+	printf("\nThanks for traveling with air penguin!\n");
 }
 
 void sendSignalMessage(int deviceId, char command)
