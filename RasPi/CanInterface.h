@@ -49,5 +49,6 @@ struct sockaddr_can addr;
 struct ifreq ifr;
 fd_set rdfs;
 static int  dindex[MAXIFNAMES];
+static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg)
 
 #endif /* CANINTERFACE_H_ */
