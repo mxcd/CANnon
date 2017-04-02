@@ -33,7 +33,7 @@
 
 
 
-void initCanInterface()
+void initCanInterface(int deviceId)
 {
 	/* open socket */
 	if ((baseSocket = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
@@ -52,9 +52,21 @@ void initCanInterface()
 
 	//struct can_filter *rfilter;
 	//rfilter = malloc(sizeof(struct can_filter));
+
+
 	struct can_filter rfilter;
-	rfilter.can_id = CAN_EFF_FLAG;
-	rfilter.can_mask = CAN_EFF_FLAG;
+
+	if(deviceId != 0)
+	{
+		rfilter.can_id = CAN_EFF_FLAG | deviceId << 20;
+		rfilter.can_mask = CAN_EFF_FLAG | 0xFF << 20;
+	}
+	else
+	{
+		rfilter.can_id = CAN_EFF_FLAG;
+		rfilter.can_mask = CAN_EFF_FLAG;
+	}
+
 
 	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(struct can_filter));
 
@@ -99,7 +111,11 @@ CanMessage receiveMessage()
 		msg.msg_controllen = sizeof(ctrlmsg);
 		msg.msg_flags = 0;
 
-		recvmsg(baseSocket, &msg, MSG_DONTWAIT);
+		struct timespec timeout;
+		timeout.tv_sec = 0;
+		timeout.tv_nsec = 1000;
+
+		recvmsg(baseSocket, &msg, 0);//MSG_DONTWAIT);
 
 		for (cmsg = CMSG_FIRSTHDR(&msg);
 			 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
@@ -120,7 +136,6 @@ CanMessage receiveMessage()
 
 		//printf("Received msg with id %lu\n", cMsg.id);
 	}
-
 	return cMsg;
 }
 

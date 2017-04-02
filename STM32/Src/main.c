@@ -140,6 +140,15 @@ int main(void)
 			  unlockFlash();
 			  clearUserAppFlash();
 			  sendStatus(STATUS_ERASE_FINISHED);
+			  HAL_Delay(50);
+			  sendStatus(STATUS_ERASE_FINISHED);
+			  HAL_Delay(50);
+			  sendStatus(STATUS_ERASE_FINISHED);
+		  }
+		  else if(!inFlashProcess)
+		  {
+			  //sendStatus(STATUS_ERASE_FINISHED);
+			  //HAL_Delay(500);
 		  }
 		  if(!inFlashProcess)
 		  {

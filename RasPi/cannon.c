@@ -16,7 +16,6 @@
 
 int main(int argc, char **argv)
 {
-	initCanInterface();
 	if(argc < 2)
 	{
 		fprintf(stderr, "got no arg\n");
@@ -25,28 +24,34 @@ int main(int argc, char **argv)
 	}
 	else if(argc == 2)
 	{
+		initCanInterface(0);
+
 		if(__VERBOSE)
 			printf("Got one args\n");
 		if(strcmp("ping",argv[1]) == 0)
 		{
-			printf("Doing broadcast ping...\n");
+			printf("Doing broadcast ping");
+			fflush(stdout);
 			int startTime = clock();
 
 			if(__VERBOSE)
 				printf("Start time: %i\n", startTime);
 
 			doBroadcastPing();
-			while(clock()-startTime < 3000)
+			while(clock()-startTime < 50000)
 			{
+				//printf("%i\n", clock());
 				if(canAvailable())
 				{
 					BlGenericMessage msg = receiveGenericMessage();
 					if(msg.commandId == PING_RESPONSE_ID)
 					{
 						int pingTime = clock() - startTime;
-						printf("Found device ID %i after %i ms", msg.targetDeviceId, pingTime);
+						printf("Found device ID %i after %i ms\n", msg.targetDeviceId, pingTime);
+						fflush(stdout);
 					}
 				}
+				//usleep(500);
 			}
 		}
 		else if(strcmp("peek",argv[1]) == 0)
@@ -71,6 +76,7 @@ int main(int argc, char **argv)
 	}
 	else if(argc == 3)
 	{
+		initCanInterface(0);
 		if(strcmp("interrupt", argv[1]) == 0)
                 {
 			sendSignalMessage(strtol(argv[2], NULL, 0), INTERRUPT_ID);
@@ -88,16 +94,56 @@ int main(int argc, char **argv)
 	}
 }
 
+void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int triggerRate)
+{
+	bool nack = true;
+	long counter = 0;
+
+	while(nack)
+	{
+		if(counter % 1000 == 0)
+		{
+			printf(".");
+			fflush(stdout);
+		}
+
+		if(triggerMessage != 0)
+		{
+			if(counter % triggerRate == 0)
+			{
+				sendSignalMessage(deviceId, triggerMessage);
+			}
+		}
+
+		if(canAvailable())
+		{
+			BlGenericMessage msg = receiveGenericMessage();
+			//printf("Received msg: ID:%x TDI:%x\n", msg.commandId, msg.targetDeviceId);
+			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == statusFlag)
+			{
+				nack = false;
+				printf(" ok\n");
+				fflush(stdout);
+				break;
+			}
+		}
+		++counter;
+		usleep(1);
+	}
+}
+
 void doBroadcastPing()
 {
-	CanMessage msg;
+	BlGenericMessage msg;
 
-	msg.id = 0 << 28;
-	msg.id += BROADCAST_PING_ID << 12;
+	msg.FOF = 0;
+	msg.commandId = BROADCAST_PING_ID;
 	msg.data[0] = CANNON_DEVICE_ID;
-	msg.ext = 1;
-	printf("Sending msg with CAN id %lu\n", msg.id);
-	sendMessage(&msg);
+	msg.flashPackId = 0;
+	msg.length = 1;
+	msg.targetDeviceId = 0;
+
+	sendGenericMessage(&msg);
 }
 
 void doFlash(char* file, char* device)
@@ -108,33 +154,16 @@ void doFlash(char* file, char* device)
 	int deviceId = strtol(device, NULL, 0);
 	printf("Flashing file %s on device %i\n", file, deviceId);
 
+	initCanInterface(deviceId);
+
 	int size = getFileSize(file);
 	char* binArray = readFile(file);
 
 	printf("Waiting for interrupt to be confirmed");
 	fflush(stdout);
 	// Wait for InterruptConfirm
-	bool nack = true;
-	while(nack)
-	{
-		printf(".");
-		fflush(stdout);
-		sendSignalMessage(deviceId, INTERRUPT_ID);
-		if(canAvailable())
-		{
-			BlGenericMessage msg = receiveGenericMessage();
 
-			//printf("Received msg: ID:%x TDI:%x\n", msg.commandId, msg.targetDeviceId);
-			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_IN_BOOT_MENU)
-			{
-				nack = false;
-				printf(" ok\n");
-				fflush(stdout);
-				break;
-			}
-		}
-		usleep(250000);
-	}
+	waitForSignal(deviceId, STATUS_IN_BOOT_MENU, INTERRUPT_ID, 20000);
 
 	usleep(500000);
 	printf("Waiting for flash to be erased");
@@ -142,24 +171,7 @@ void doFlash(char* file, char* device)
 
 	sendSignalMessage(deviceId, INIT_FLASH_ID);
 
-	nack = true;
-	while(nack)
-	{
-		printf(".");
-		fflush(stdout);
-		if(canAvailable())
-		{
-			BlGenericMessage msg = receiveGenericMessage();
-			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_ERASE_FINISHED)
-			{
-				nack = false;
-				printf(" ok\n");
-				fflush(stdout);
-				break;
-			}
-		}
-		usleep(500000);
-	}
+	waitForSignal(deviceId, STATUS_ERASE_FINISHED, 0, 0);
 
 	usleep(50000);
 
@@ -169,6 +181,7 @@ void doFlash(char* file, char* device)
 	fflush(stdout);
 
 	int sprintBasePack = 0;
+	bool nack = true;
 
 	for(i = 0; i < size/8; ++i)
 	{
@@ -259,24 +272,8 @@ void doFlash(char* file, char* device)
 	sendSignalMessage(deviceId, START_APP_ID);
 	printf("starting user app");
 
-	nack = true;
-	while(nack)
-	{
-		printf(".");
-		fflush(stdout);
-		if(canAvailable())
-		{
-			BlGenericMessage msg = receiveGenericMessage();
-			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == STATUS_STARTING_APP)
-			{
-				nack = false;
-				printf(" ok\n");
-				fflush(stdout);
-				break;
-			}
-		}
-		usleep(100000);
-	}
+	waitForSignal(deviceId, STATUS_STARTING_APP, 0, 0);
+
 	printf("\nThanks for traveling with air penguin!\n");
 }
 
