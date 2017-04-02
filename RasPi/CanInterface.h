@@ -33,22 +33,24 @@
 #define ANL "\r\n"    /* newline in ASC mode */
 
 
-void sendGenericMessage(BlGenericMessage* msg);
+void initCanInterface(int deviceId);
+
+int receiveMessage(CanMessage* cMsg);
+int receiveGenericMessage(BlGenericMessage* msg);
+
 void sendMessage(CanMessage* msg);
-CanMessage receiveMessage();
-bool canAvailable();
-void initCanInterface();
-BlGenericMessage receiveGenericMessage();
-//int idx2dindex(int ifidx, int socket);
+void sendGenericMessage(BlGenericMessage* msg);
+
+void printErrorCodes(BlGenericMessage* msg);
+
+static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg);
+static void genericToMsg(BlGenericMessage* msg, CanMessage* cMsg);
+
+static bool SetSocketBlockingEnabled(int fd, bool blocking);
+
+
 int baseSocket; /* can raw socket */
-struct iovec iov;
-struct msghdr msg;
 struct can_frame frame;
-char ctrlmsg[CMSG_SPACE(sizeof(struct timeval)) + CMSG_SPACE(sizeof(__u32))];
 struct sockaddr_can addr;
-struct ifreq ifr;
-fd_set rdfs;
-static int  dindex[MAXIFNAMES];
-static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg)
 
 #endif /* CANINTERFACE_H_ */

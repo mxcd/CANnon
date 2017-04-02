@@ -24,6 +24,7 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include <fcntl.h>
 
 #include "lib.h"
 
@@ -47,10 +48,6 @@ void initCanInterface(int deviceId)
 	addr.can_family = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
 
-	//struct can_filter *rfilter;
-	//rfilter = malloc(sizeof(struct can_filter));
-
-
 	struct can_filter rfilter;
 
 	if(deviceId != 0)
@@ -64,24 +61,24 @@ void initCanInterface(int deviceId)
 		rfilter.can_mask = CAN_EFF_FLAG;
 	}
 
-
 	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
 
 	bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr));
-}
-
-bool canAvailable()
-{
-	FD_ZERO(&rdfs);
-	FD_SET(baseSocket, &rdfs);
-	return (FD_ISSET(baseSocket, &rdfs));
+	SetSocketBlockingEnabled(baseSocket, false);
 }
 
 int receiveMessage(CanMessage* cMsg)
 {
+	if(__VERBOSE)
+		printf("cMsg receive\n");
+	fflush(stdout);
 	struct can_frame frame;
-	int nbytes;
+	int nbytes, i;
+	if(__VERBOSE)
+		printf("socket read\n");
 	nbytes = read(baseSocket, &frame, sizeof(struct can_frame));
+	if(__VERBOSE)
+		printf("socket read done\n");
 
 	if (nbytes < 0)
 	{
@@ -95,25 +92,41 @@ int receiveMessage(CanMessage* cMsg)
 		fprintf(stderr, "read: incomplete CAN frame\n");
 		return 1;
 	}
-	return cMsg;
+
+	for(i = 0; i < frame.can_dlc; ++i)
+	{
+		cMsg->data[i] = frame.data[i];
+	}
+	cMsg->dlc = frame.can_dlc;
+	cMsg->ext = true;
+	cMsg->id = frame.can_id;
+
+	return nbytes;
 }
 
-BlGenericMessage receiveGenericMessage(BlGenericMessage* msg)
+int receiveGenericMessage(BlGenericMessage* msg)
 {
+	if(__VERBOSE)
+		printf("msg receive\n");
+	fflush(stdout);
 	CanMessage cMsg;
-	receiveMessage(&cMsg);
+	int nbytes;
 
-	BlGenricMessage msg = msgToGeneric(&cMsg);
+	nbytes = receiveMessage(&cMsg);
+	msgToGeneric(&cMsg, msg);
 
-	return msg;
+	printErrorCodes(msg);
+
+	return nbytes;
 }
 
 void printErrorCodes(BlGenericMessage* msg)
 {
 	if(__VERBOSE)
+	{
 		if(msg->commandId == STATUS_ID)
 		{
-			switch(msg.data[0])
+			switch(msg->data[0])
 			{
 			case ERRCODE_NO_FLASH_PROCESS:
 				printf("Error: No flashing in process!\n");
@@ -147,42 +160,28 @@ void printErrorCodes(BlGenericMessage* msg)
 				break;
 			}
 		}
+	}
 }
 
 void sendGenericMessage(BlGenericMessage* msg)
 {
-	int id = ((msg->FOF & 0x1) << 28);
-	id |= (msg->targetDeviceId & 0xFF) << 20;
-	if(msg->FOF)
-	{
-		id |= (msg->flashPackId & 0xFFFFF);
-	}
-	else
-	{
-		id |= (msg->commandId & 0xFF) << 12;
-	}
-
+	printf("msg send");
+	fflush(stdout);
 	CanMessage cMsg;
-	cMsg.dlc = msg->length;
-	cMsg.id = id;
-	cMsg.ext = 1;
-	int i;
-	for(i = 0; i < msg->length; ++i)
-	{
-		cMsg.data[i] = msg->data[i];
-//		printf("%i:%x\n", i, msg->data[i]);
-	}
+	genericToMsg(msg, &cMsg);
 	sendMessage(&cMsg);
 }
 
 void sendMessage(CanMessage* msg)
 {
+	printf("cMsg send");
+	fflush(stdout);
 	int nbytes;
 	int i;
 	struct can_frame frame;
 	frame.can_dlc = msg->dlc;
 	frame.can_id = msg->id;
-//	printf("Sending msg /w id %x\n", msg->id);
+
 	if(msg->ext)
 	{
 		frame.can_id |= CAN_EFF_FLAG;
@@ -210,3 +209,43 @@ static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg)
 		msg->data[i] = cMsg->data[i];
 	}
 }
+
+static void genericToMsg(BlGenericMessage* msg, CanMessage* cMsg)
+{
+	int id = ((msg->FOF & 0x1) << 28);
+	id |= (msg->targetDeviceId & 0xFF) << 20;
+	if(msg->FOF)
+	{
+		id |= (msg->flashPackId & 0xFFFFF);
+	}
+	else
+	{
+		id |= (msg->commandId & 0xFF) << 12;
+	}
+
+	cMsg->dlc = msg->length;
+	cMsg->id = id;
+	cMsg->ext = 1;
+	int i;
+	for(i = 0; i < msg->length; ++i)
+	{
+		cMsg->data[i] = msg->data[i];
+	}
+}
+
+/** Returns true on success, or false if there was an error */
+bool SetSocketBlockingEnabled(int fd, bool blocking)
+{
+   if (fd < 0) return false;
+
+	#ifdef WIN32
+	   unsigned long mode = blocking ? 0 : 1;
+	   return (ioctlsocket(fd, FIONBIO, &mode) == 0) ? true : false;
+	#else
+	   int flags = fcntl(fd, F_GETFL, 0);
+	   if (flags < 0) return false;
+	   flags = blocking ? (flags&~O_NONBLOCK) : (flags|O_NONBLOCK);
+	   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+	#endif
+}
+

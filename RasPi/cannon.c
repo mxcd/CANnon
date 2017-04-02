@@ -40,10 +40,11 @@ int main(int argc, char **argv)
 			doBroadcastPing();
 			while(clock()-startTime < 50000)
 			{
-				//printf("%i\n", clock());
-				if(canAvailable())
+				BlGenericMessage msg;
+
+				int nbytes = receiveGenericMessage(&msg);
+				if(nbytes > 0)
 				{
-					BlGenericMessage msg = receiveGenericMessage();
 					if(msg.commandId == PING_RESPONSE_ID)
 					{
 						int pingTime = clock() - startTime;
@@ -51,7 +52,6 @@ int main(int argc, char **argv)
 						fflush(stdout);
 					}
 				}
-				//usleep(500);
 			}
 		}
 		else if(strcmp("peek",argv[1]) == 0)
@@ -59,9 +59,11 @@ int main(int argc, char **argv)
 			printf("Listening on CAN bus\n");
 			while(1)
 			{
-				if(canAvailable())
+				BlGenericMessage msg;
+
+				int nbytes = receiveGenericMessage(&msg);
+				if(nbytes > 0)
 				{
-					BlGenericMessage msg = receiveGenericMessage();
 					printf("%i \t-> %i : %i[", clock(), msg.targetDeviceId, msg.FOF, msg.length);
 					int i;
 					for(i = 0; i < msg.length; ++i)
@@ -78,10 +80,10 @@ int main(int argc, char **argv)
 	{
 		initCanInterface(0);
 		if(strcmp("interrupt", argv[1]) == 0)
-                {
+		{
 			sendSignalMessage(strtol(argv[2], NULL, 0), INTERRUPT_ID);
 			printf("Sent interrupt\n");
-                }
+		}
 	}
 	else if(argc == 4)
 	{
@@ -99,6 +101,8 @@ void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int trigger
 	bool nack = true;
 	long counter = 0;
 
+	printf("\nWait for signal\n");
+
 	while(nack)
 	{
 		if(counter % 1000 == 0)
@@ -115,9 +119,11 @@ void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int trigger
 			}
 		}
 
-		if(canAvailable())
+		BlGenericMessage msg;
+		int nbytes = receiveGenericMessage(&msg);
+
+		if(nbytes > 0)
 		{
-			BlGenericMessage msg = receiveGenericMessage();
 			//printf("Received msg: ID:%x TDI:%x\n", msg.commandId, msg.targetDeviceId);
 			if(msg.targetDeviceId == deviceId && msg.commandId == STATUS_ID && msg.data[0] == statusFlag)
 			{
@@ -207,9 +213,10 @@ void doFlash(char* file, char* device)
 			nack = true;
 			while(nack)
 			{
-				if(canAvailable())
+				BlGenericMessage msg;
+				int nbytes = receiveGenericMessage(&msg);
+				if(nbytes > 0)
 				{
-					BlGenericMessage msg = receiveGenericMessage();
 					if(msg.targetDeviceId == deviceId && msg.commandId == ACK_ID)
 					{
 						nack = false;
@@ -281,29 +288,28 @@ void sendSignalMessage(int deviceId, char command)
 {
 	BlGenericMessage msg;
 
-        msg.FOF = 0;
-        msg.targetDeviceId = deviceId;
-        msg.flashPackId = 0;
-        msg.commandId = command;
-        msg.length = 0;
-        sendGenericMessage(&msg);
+	msg.FOF = 0;
+	msg.targetDeviceId = deviceId;
+	msg.flashPackId = 0;
+	msg.commandId = command;
+	msg.length = 0;
+	sendGenericMessage(&msg);
 }
 
 void startFlashing(int deviceId, int packsPerSprint, int size)
 {
 	BlGenericMessage msg;
 
-        msg.FOF = 0;
-        msg.targetDeviceId = deviceId;
-        msg.flashPackId = 0;
-        msg.commandId = START_FLASH_ID;
-        msg.length = 4;
+	msg.FOF = 0;
+	msg.targetDeviceId = deviceId;
+	msg.flashPackId = 0;
+	msg.commandId = START_FLASH_ID;
+	msg.length = 4;
 	msg.data[0] = size&0xFF;
 	msg.data[1] = (size>>8)&0xFF;
 	msg.data[2] = (size>>16)&0xFF;
 	msg.data[3] = packsPerSprint&0xFF;
-        sendGenericMessage(&msg);
-
+    sendGenericMessage(&msg);
 }
 
 void sendFlashPack(int deviceId, int packId, char* data, int len)
