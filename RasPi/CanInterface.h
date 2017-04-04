@@ -33,13 +33,22 @@
 #define ANL "\r\n"    /* newline in ASC mode */
 
 
-void sendGenericMessage(BlGenericMessage* msg);
+void initCanInterface(int deviceId);
+
+int receiveMessage(CanMessage* cMsg);
+int receiveGenericMessage(BlGenericMessage* msg);
+
 void sendMessage(CanMessage* msg);
-CanMessage receiveMessage();
-bool canAvailable();
-void initCanInterface();
-BlGenericMessage receiveGenericMessage();
-//int idx2dindex(int ifidx, int socket);
+void sendGenericMessage(BlGenericMessage* msg);
+
+void printErrorCodes(BlGenericMessage* msg);
+
+static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg);
+static void genericToMsg(BlGenericMessage* msg, CanMessage* cMsg);
+
+static bool SetSocketBlockingEnabled(int fd, bool blocking);
+
+
 int baseSocket; /* can raw socket */
 struct iovec iov;
 struct msghdr msg;

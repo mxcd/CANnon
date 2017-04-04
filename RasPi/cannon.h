@@ -31,4 +31,5 @@ int getFileSize(char* file);
 void waitFor (unsigned int secs);
 void startFlashing(int deviceId, int packsPerSprint, int size);
 void sendFlashPack(int deviceId, int packId, char* data, int len);
+void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int triggerRate);
 #endif /* CANNON_H_ */

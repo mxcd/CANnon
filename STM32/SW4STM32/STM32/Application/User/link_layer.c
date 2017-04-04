@@ -112,28 +112,26 @@ void lockFlash()
 void writeMessageToFlash(uint8_t* data, uint32_t position, uint8_t length)
 {
 	uint32_t flashBuffer;
-	uint8_t i;
-	uint8_t j;
+	uint8_t i, j, counter;
+
+	counter = 0;
 
 	if(length != 0)
 	{
-		// Code for 32 Bit addressing
-		/*for(i = 0; i < ((length-1/4) + 1); ++ i)
-		{
-			flashBuffer = 0;
-			for(j = 0; j < 4; ++i)
-			{
-				flashBuffer |= data[j] << (j*8);
-			}
-			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i, flashBuffer);
-		}*/
-
 		for(i = 0; i < (((length-1)/4) + 1); i++)
 		{
 			flashBuffer = 0;
 			for(j = 0; j < 4; j++)
 			{
-				flashBuffer |= data[j+(i*4)] << (j*8);
+				if(counter < length)
+				{
+					flashBuffer |= data[j+(i*4)] << (j*8);
+				}
+				else
+				{
+					flashBuffer |= 0xFF << (j*8);
+				}
+				counter++;
 			}
 			HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, GTBL_AppStartAddress + position + i*4, flashBuffer);
 		}

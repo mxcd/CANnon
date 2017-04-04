@@ -41,7 +41,7 @@
 #include "link_layer.h"
 #include "target_device.h"
 
-#define BL_TIMEOUT 1000
+#define BL_TIMEOUT 5000
 
 /* USER CODE END Includes */
 
@@ -140,6 +140,15 @@ int main(void)
 			  unlockFlash();
 			  clearUserAppFlash();
 			  sendStatus(STATUS_ERASE_FINISHED);
+			  HAL_Delay(50);
+			  sendStatus(STATUS_ERASE_FINISHED);
+			  HAL_Delay(50);
+			  sendStatus(STATUS_ERASE_FINISHED);
+		  }
+		  else if(!inFlashProcess)
+		  {
+			  //sendStatus(STATUS_ERASE_FINISHED);
+			  //HAL_Delay(500);
 		  }
 		  if(!inFlashProcess)
 		  {
