@@ -166,6 +166,27 @@ void doFlash(char* file, char* device)
 	int size = getFileSize(file);
 	char* binArray = readFile(file);
 
+	// Very verbose printing of complete bin file
+	/*
+	int counter = 0;
+	for(i = 0; i < size/16; ++i)
+	{
+		printf("#%x\t", counter);
+		for(j = 0; j < 4; ++j)
+		{
+			printf("[");
+			int k;
+			for(k = 0; k < 4; ++k)
+			{
+				printf("%x ", binArray[counter]);
+				counter++;
+			}
+			printf("]\t");
+		}
+		printf("\n");
+	}
+	*/
+
 	printf("Waiting for interrupt to be confirmed");
 	fflush(stdout);
 	// Wait for InterruptConfirm
@@ -315,6 +336,17 @@ void startFlashing(int deviceId, int packsPerSprint, int size)
 
 void sendFlashPack(int deviceId, int packId, char* data, int len)
 {
+	/*
+	if(packId == 642 || packId == 1548 || len != 8)
+	{
+		printf("\n\n%i\n%i\n", packId, len);
+		int i = 0;
+		for(;i < len; ++i)
+		{
+			printf(" [%x] ", data[i]);
+		}
+		printf("\n\n");
+	}*/
 	BlGenericMessage msg;
 
         msg.FOF = 1;
@@ -331,7 +363,7 @@ void sendFlashPack(int deviceId, int packId, char* data, int len)
 		}
 		else
 		{
-			msg.data[i] = 0;
+			msg.data[i] = 0xFF;
 		}
 	}
         sendGenericMessage(&msg);

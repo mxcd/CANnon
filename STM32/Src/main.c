@@ -41,7 +41,7 @@
 #include "link_layer.h"
 #include "target_device.h"
 
-#define BL_TIMEOUT 1000
+#define BL_TIMEOUT 5000
 
 /* USER CODE END Includes */
 
