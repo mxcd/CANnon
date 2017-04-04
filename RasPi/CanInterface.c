@@ -61,10 +61,17 @@ void initCanInterface(int deviceId)
 		rfilter.can_mask = CAN_EFF_FLAG;
 	}
 
-	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(struct can_filter));
 
 	bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr));
-	SetSocketBlockingEnabled(baseSocket, false);
+	//SetSocketBlockingEnabled(baseSocket, false);
+	/**
+	iov.iov_base = &frame;
+	msg.msg_name = &addr;
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+	msg.msg_control = &ctrlmsg;
+	 */
 }
 
 int receiveMessage(CanMessage* cMsg)
