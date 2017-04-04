@@ -36,17 +36,23 @@
 
 void initCanInterface(int deviceId)
 {
-	int baseSocket;
-	struct sockaddr_can addr;
-	struct ifreq ifr;
-
-	baseSocket = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+	/* open socket */
+	if ((baseSocket = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
+	{
+		perror("socket");
+	}
 
 	addr.can_family = AF_CAN;
-	strcpy(ifr.ifr_name, "can0" );
-	ioctl(baseSocket, SIOCGIFINDEX, &ifr);
+
+	strcpy(ifr.ifr_name, "can0");
+	if (ioctl(baseSocket, SIOCGIFINDEX, &ifr) < 0)
+	{
+		perror("SIOCGIFINDEX");
+	}
 	addr.can_ifindex = ifr.ifr_ifindex;
 
+	//struct can_filter *rfilter;
+	//rfilter = malloc(sizeof(struct can_filter));
 	struct can_filter rfilter;
 
 	if(deviceId != 0)
@@ -62,8 +68,12 @@ void initCanInterface(int deviceId)
 
 	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(struct can_filter));
 
-	bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr));
-	//SetSocketBlockingEnabled(baseSocket, false);
+	//free(rfilter);
+
+	if (bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0)
+	{
+		perror("bind");
+	}
 
 	iov.iov_base = &frame;
 	msg.msg_name = &addr;
@@ -75,39 +85,31 @@ void initCanInterface(int deviceId)
 int receiveMessage(CanMessage* cMsg)
 {
 	int i;
-	int count, nbytes = 0;
+	int nbytes, count = 0;
 	struct cmsghdr *cmsg;
 
 	FD_ZERO(&rdfs);
 	FD_SET(baseSocket, &rdfs);
 	if(FD_ISSET(baseSocket, &rdfs))
 	{
-		if(__VERBOSE)
-			printf("cMsg receive\n");
-		fflush(stdout);
-		struct can_frame frame;
-		int nbytes, i;
-		if(__VERBOSE)
-			printf("socket read\n");
+		int idx;
 
-		//nbytes = read(baseSocket, &frame, sizeof(struct can_frame));
-		nbytes = recvfrom(baseSocket, &frame, sizeof(struct can_frame), 0, NULL, NULL);
+		/* these settings may be modified by recvmsg() */
+		iov.iov_len = sizeof(frame);
+		msg.msg_namelen = sizeof(addr);
+		msg.msg_controllen = sizeof(ctrlmsg);
+		msg.msg_flags = 0;
 
-		if(__VERBOSE)
-			printf("socket read done\n");
+		nbytes = recvmsg(baseSocket, &msg, MSG_DONTWAIT);
 
-		if (nbytes < 0)
-		{
-			perror("can raw socket read");
-			return 1;
+		for (cmsg = CMSG_FIRSTHDR(&msg);
+			 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
+			 cmsg = CMSG_NXTHDR(&msg,cmsg)) {
 		}
 
-		/* paranoid check ... */
-		if (nbytes < sizeof(struct can_frame))
-		{
-			fprintf(stderr, "read: incomplete CAN frame\n");
-			return 1;
-		}
+
+		//idx = idx2dindex(addr.can_ifindex, &addr);
+
 
 		for(i = 0; i < frame.can_dlc; ++i)
 		{
@@ -116,6 +118,8 @@ int receiveMessage(CanMessage* cMsg)
 		cMsg->dlc = frame.can_dlc;
 		cMsg->ext = true;
 		cMsg->id = frame.can_id;
+
+		//printf("Received msg with id %lu\n", cMsg.id);
 	}
 
 	return nbytes;
@@ -182,8 +186,12 @@ void printErrorCodes(BlGenericMessage* msg)
 
 void sendGenericMessage(BlGenericMessage* msg)
 {
-	printf("msg send");
-	fflush(stdout);
+	if(__VERBOSE)
+	{
+		printf("msg send");
+		fflush(stdout);
+	}
+
 	CanMessage cMsg;
 	genericToMsg(msg, &cMsg);
 	sendMessage(&cMsg);
@@ -191,8 +199,12 @@ void sendGenericMessage(BlGenericMessage* msg)
 
 void sendMessage(CanMessage* msg)
 {
-	printf("cMsg send");
-	fflush(stdout);
+	if(__VERBOSE)
+	{
+		printf("cMsg send");
+		fflush(stdout);
+	}
+
 	int nbytes;
 	int i;
 	struct can_frame frame;

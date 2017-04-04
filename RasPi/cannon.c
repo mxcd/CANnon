@@ -101,7 +101,8 @@ void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int trigger
 	bool nack = true;
 	long counter = 0;
 
-	printf("\nWait for signal\n");
+	if(__VERBOSE)
+		printf("\nWait for signal\n");
 
 	while(nack)
 	{
