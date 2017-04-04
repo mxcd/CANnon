@@ -246,6 +246,7 @@ void doFlash(char* file, char* device)
 					}
 					else if(msg.targetDeviceId == deviceId && msg.commandId == NACK_ID)
 					{
+						printf("\nReceived NACK!\n");
 						int k;
 						long sprintFlags = 0;
 						for(k = 0; k < msg.length; ++k)
@@ -257,7 +258,8 @@ void doFlash(char* file, char* device)
 						{
 							if(!((sprintFlags>>k)&0x1))
 							{
-								printf("\nResending pack %i\n", sprintBasePack + k);
+								printf("0");
+								//printf("\nResending pack %i\n", sprintBasePack + k);
 								fflush(stdout);
 								for(j = 0; j < 8; ++j)
 								{
@@ -265,6 +267,10 @@ void doFlash(char* file, char* device)
 								}
 								sendFlashPack(deviceId, sprintBasePack + k, pack, 8);
 								usleep(500);
+							}
+							else
+							{
+								printf("1");
 							}
 						}
 						sendSignalMessage(deviceId, ACK_REQUEST_ID);
