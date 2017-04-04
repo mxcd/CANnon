@@ -42,10 +42,9 @@ void initCanInterface(int deviceId)
 
 	baseSocket = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
+	addr.can_family = AF_CAN;
 	strcpy(ifr.ifr_name, "can0" );
 	ioctl(baseSocket, SIOCGIFINDEX, &ifr);
-
-	addr.can_family = AF_CAN;
 	addr.can_ifindex = ifr.ifr_ifindex;
 
 	struct can_filter rfilter;
@@ -65,48 +64,59 @@ void initCanInterface(int deviceId)
 
 	bind(baseSocket, (struct sockaddr *)&addr, sizeof(addr));
 	//SetSocketBlockingEnabled(baseSocket, false);
-	/**
+
 	iov.iov_base = &frame;
 	msg.msg_name = &addr;
 	msg.msg_iov = &iov;
 	msg.msg_iovlen = 1;
 	msg.msg_control = &ctrlmsg;
-	 */
 }
 
 int receiveMessage(CanMessage* cMsg)
 {
-	if(__VERBOSE)
-		printf("cMsg receive\n");
-	fflush(stdout);
-	struct can_frame frame;
-	int nbytes, i;
-	if(__VERBOSE)
-		printf("socket read\n");
-	nbytes = read(baseSocket, &frame, sizeof(struct can_frame));
-	if(__VERBOSE)
-		printf("socket read done\n");
+	int i;
+	int count, nbytes = 0;
+	struct cmsghdr *cmsg;
 
-	if (nbytes < 0)
+	FD_ZERO(&rdfs);
+	FD_SET(baseSocket, &rdfs);
+	if(FD_ISSET(baseSocket, &rdfs))
 	{
-		perror("can raw socket read");
-		return 1;
-	}
+		if(__VERBOSE)
+			printf("cMsg receive\n");
+		fflush(stdout);
+		struct can_frame frame;
+		int nbytes, i;
+		if(__VERBOSE)
+			printf("socket read\n");
 
-	/* paranoid check ... */
-	if (nbytes < sizeof(struct can_frame))
-	{
-		fprintf(stderr, "read: incomplete CAN frame\n");
-		return 1;
-	}
+		//nbytes = read(baseSocket, &frame, sizeof(struct can_frame));
+		nbytes = recvfrom(baseSocket, &frame, sizeof(struct can_frame), 0, NULL, NULL);
 
-	for(i = 0; i < frame.can_dlc; ++i)
-	{
-		cMsg->data[i] = frame.data[i];
+		if(__VERBOSE)
+			printf("socket read done\n");
+
+		if (nbytes < 0)
+		{
+			perror("can raw socket read");
+			return 1;
+		}
+
+		/* paranoid check ... */
+		if (nbytes < sizeof(struct can_frame))
+		{
+			fprintf(stderr, "read: incomplete CAN frame\n");
+			return 1;
+		}
+
+		for(i = 0; i < frame.can_dlc; ++i)
+		{
+			cMsg->data[i] = frame.data[i];
+		}
+		cMsg->dlc = frame.can_dlc;
+		cMsg->ext = true;
+		cMsg->id = frame.can_id;
 	}
-	cMsg->dlc = frame.can_dlc;
-	cMsg->ext = true;
-	cMsg->id = frame.can_id;
 
 	return nbytes;
 }

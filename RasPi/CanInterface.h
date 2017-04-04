@@ -50,7 +50,13 @@ static bool SetSocketBlockingEnabled(int fd, bool blocking);
 
 
 int baseSocket; /* can raw socket */
+struct iovec iov;
+struct msghdr msg;
 struct can_frame frame;
+char ctrlmsg[CMSG_SPACE(sizeof(struct timeval)) + CMSG_SPACE(sizeof(__u32))];
 struct sockaddr_can addr;
+struct ifreq ifr;
+fd_set rdfs;
+static int  dindex[MAXIFNAMES];
 
 #endif /* CANINTERFACE_H_ */
