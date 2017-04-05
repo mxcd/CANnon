@@ -196,8 +196,8 @@ void doFlash(char* deviceName)
 			printf("]\t");
 		}
 		printf("\n");
-	}
-	*/
+	}*/
+
 
 	printf("Resetting device to enter bootloader\n");
 	fflush(stdout);
@@ -304,14 +304,17 @@ void doFlash(char* deviceName)
 
 	usleep(500);
 	int remainder = size%8;
+	printf("remainder: %i\n", remainder);
 	if(remainder != 0)
 	{
-		int base = size-((size/8)*8);
+		int base = size-(size%8);
+		printf("base: %x\n", base);
 		int i;
 		char pack[8];
 		for(i = 0; i < remainder; ++i)
 		{
 			pack[i] = binArray[base + i];
+			printf("index: %x\n", (base+i));
 		}
 		sendFlashPack(deviceId, size/8, pack, remainder);
 	}
@@ -392,12 +395,12 @@ void resetDevice(DEVICE_CONFIG device)
 	CanMessage msg;
 	msg.ext = false;
 	msg.dlc = 4;
-	msg.id = LVS_F_CAN_ID;
 	int i;
 	for(i = 0; i < 4; ++i)
 	{
 		msg.data[i] = dataOff >> (i*8);
 	}
+	msg.id = LVS_F_CAN_ID;
 	sendMessage(&msg);
 	msg.id = LVS_R1_CAN_ID;
 	sendMessage(&msg);
@@ -469,7 +472,7 @@ void startFlashing(int deviceId, int packsPerSprint, int size)
 void sendFlashPack(int deviceId, int packId, char* data, int len)
 {
 
-	/*
+
 	if(len != 8)
 	{
 		printf("\n\n%x\n%i\n", packId*8, len);
@@ -484,7 +487,7 @@ void sendFlashPack(int deviceId, int packId, char* data, int len)
 //		data[2] = 0xf4;
 //		data[3] = 0x0;
 	}
-	*/
+
 	BlGenericMessage msg;
 
         msg.FOF = 1;

@@ -112,7 +112,12 @@ void initTargetDeviceConfig()
 	blconf[19].LVS = LVS_R1;
 	blconf[19].CH = 4;
 
-	maxDeviceCount = 20;
+	blconf[20].id = 21;
+	blconf[20].name = "MS_AD_OCPD";
+	blconf[20].LVS = LVS_R1;
+	blconf[20].CH = 2;
+
+	maxDeviceCount = 21;
 
 	//#define CHIP_ID 1U 	// COM_GW 		// R1 8
 	//#define CHIP_ID 2U	// HMI_DB 		// F 2
