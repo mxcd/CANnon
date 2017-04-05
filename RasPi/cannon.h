@@ -25,11 +25,20 @@
 //int main(int argc, char **argv);
 void doBroadcastPing();
 void sendSignalMessage(int deviceId, char command);
-void doFlash(char* file, char* device);
+void doFlash(char* deviceName);
 char* readFile(char* file);
 int getFileSize(char* file);
+void resetDevice(DEVICE_CONFIG device);
+void restoreDevicePower();
 void waitFor (unsigned int secs);
 void startFlashing(int deviceId, int packsPerSprint, int size);
 void sendFlashPack(int deviceId, int packId, char* data, int len);
 void waitForSignal(int deviceId, int statusFlag, int triggerMessage, int triggerRate);
+DEVICE_CONFIG findDeviceByName(char* deviceName);
+char* concat(const char *s1, const char *s2);
+
+int lvs_f_on_states = 0;
+int lvs_r1_on_states = 0;
+int lvs_r2_on_states = 0;
+
 #endif /* CANNON_H_ */

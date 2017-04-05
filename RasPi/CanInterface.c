@@ -53,20 +53,29 @@ void initCanInterface(int deviceId)
 
 	//struct can_filter *rfilter;
 	//rfilter = malloc(sizeof(struct can_filter));
-	struct can_filter rfilter;
+	struct can_filter rfilter[4];
 
 	if(deviceId != 0)
 	{
-		rfilter.can_id = CAN_EFF_FLAG | deviceId << 20;
-		rfilter.can_mask = CAN_EFF_FLAG | 0xFF << 20;
+		rfilter[0].can_id = CAN_EFF_FLAG | deviceId << 20;
+		rfilter[0].can_mask = CAN_EFF_FLAG | 0xFF << 20;
 	}
 	else
 	{
-		rfilter.can_id = CAN_EFF_FLAG;
-		rfilter.can_mask = CAN_EFF_FLAG;
+		rfilter[0].can_id = CAN_EFF_FLAG;
+		rfilter[0].can_mask = CAN_EFF_FLAG;
 	}
 
-	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(struct can_filter));
+	rfilter[1].can_id = 0x421;
+	rfilter[1].can_mask = 0x7FF;
+
+	rfilter[2].can_id = 0x424;
+	rfilter[2].can_mask = 0x7FF;
+
+	rfilter[3].can_id = 0x427;
+	rfilter[3].can_mask = 0x7FF;
+
+	setsockopt(baseSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, 4*sizeof(struct can_filter));
 
 	//free(rfilter);
 
@@ -88,6 +97,12 @@ int receiveMessage(CanMessage* cMsg)
 	int nbytes, count = 0;
 	struct cmsghdr *cmsg;
 
+	cMsg->dlc = 0;
+	cMsg->id = 0;
+	cMsg->ext = 0;
+	for(i = 0; i < 8; ++i)
+		cMsg->data[i] = 0;
+
 	FD_ZERO(&rdfs);
 	FD_SET(baseSocket, &rdfs);
 	if(FD_ISSET(baseSocket, &rdfs))
@@ -101,24 +116,26 @@ int receiveMessage(CanMessage* cMsg)
 		msg.msg_flags = 0;
 
 		nbytes = recvmsg(baseSocket, &msg, MSG_DONTWAIT);
-
-		for (cmsg = CMSG_FIRSTHDR(&msg);
-			 cmsg && (cmsg->cmsg_level == SOL_SOCKET);
-			 cmsg = CMSG_NXTHDR(&msg,cmsg)) {
-		}
-
-
-		//idx = idx2dindex(addr.can_ifindex, &addr);
-
-
-		for(i = 0; i < frame.can_dlc; ++i)
+		if(nbytes > 0)
 		{
-			cMsg->data[i] = frame.data[i];
-		}
-		cMsg->dlc = frame.can_dlc;
-		cMsg->ext = true;
-		cMsg->id = frame.can_id;
+			for (cmsg = CMSG_FIRSTHDR(&msg);
+				cmsg && (cmsg->cmsg_level == SOL_SOCKET);
+				cmsg = CMSG_NXTHDR(&msg,cmsg)) {
+			}
 
+			//idx = idx2dindex(addr.can_ifindex, &addr);
+
+			printf("%x:", frame.can_id);
+			for(i = 0; i < frame.can_dlc; ++i)
+			{
+				cMsg->data[i] = frame.data[i];
+				printf("[%x]", frame.data[i]);
+			}
+			printf("\n");
+			cMsg->dlc = frame.can_dlc;
+			cMsg->ext = true;
+			cMsg->id = frame.can_id;
+		}
 		//printf("Received msg with id %lu\n", cMsg.id);
 	}
 
@@ -224,6 +241,17 @@ void sendMessage(CanMessage* msg)
 	{
 		perror("write");
 	}
+}
+
+void clearInputBuffer()
+{
+	int nbytes;
+	do
+	{
+		CanMessage msg;
+		nbytes = receiveMessage(&msg);
+	}
+	while(nbytes > 0);
 }
 
 static void msgToGeneric(CanMessage* cMsg, BlGenericMessage* msg)

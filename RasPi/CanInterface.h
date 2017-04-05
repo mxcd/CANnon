@@ -48,6 +48,8 @@ static void genericToMsg(BlGenericMessage* msg, CanMessage* cMsg);
 
 static bool SetSocketBlockingEnabled(int fd, bool blocking);
 
+void clearInputBuffer();
+
 
 int baseSocket; /* can raw socket */
 struct iovec iov;

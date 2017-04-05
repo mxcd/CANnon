@@ -58,4 +58,29 @@
 #define CANNON_DEVICE_ID 42U
 #define __VERBOSE 0
 
+#define LVS_F 0
+#define LVS_R1 1
+#define LVS_R2 2
+#define LVS_NONE 3
+#define LVS_BMS 4
+
+#define LVS_F_CAN_ID 0x410
+#define LVS_R1_CAN_ID 0x412
+#define LVS_R2_CAN_ID 0x413
+
+typedef struct
+{
+	int LVS;
+	int CH;
+	char* name;
+	int id;
+
+}DEVICE_CONFIG;
+
+DEVICE_CONFIG blconf[30];
+int maxDeviceCount;
+
+void initTargetDeviceConfig();
+
+
 #endif /* CONFIG_H_ */

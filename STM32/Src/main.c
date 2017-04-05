@@ -119,7 +119,7 @@ int main(void)
 	  {
 		  if(!initBootMode)
 		  {
-			  sendAck();
+			  //sendAck();
 			  initBootMode = 1;
 			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
 			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
@@ -135,7 +135,8 @@ int main(void)
 		  {
 			  HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
 			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
-			  sendStatus(STATUS_START_ERASE);
+			  HAL_Delay(500);
+			  //sendStatus(STATUS_START_ERASE);
 			  flashErased = 1;
 			  unlockFlash();
 			  clearUserAppFlash();

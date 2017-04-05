@@ -29,8 +29,8 @@ clean :
 cantest : lib.o cantest.o cannon.o
 	gcc -o cantest lib.o cantest.o cannon.o
 	
-cannon : lib.o CanInterface.o cannon.o
-	gcc -o cannon lib.o CanInterface.o cannon.o
+cannon : lib.o CanInterface.o config.o cannon.o
+	gcc -o cannon lib.o CanInterface.o config.o cannon.o
 
 
 # The next lines generate the various object files
@@ -43,6 +43,9 @@ cantest.o : cantest.c
 	
 CanInterface.o : CanInterface.c
 	gcc -c CanInterface.c
+	
+config.o : config.c
+	gcc -c config.c
 
 cannon.o : cannon.c
 	gcc -c cannon.c
