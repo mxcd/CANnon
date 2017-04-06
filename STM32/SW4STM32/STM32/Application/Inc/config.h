@@ -13,13 +13,13 @@
 #define CAN_STARTUP_MSG_ID 0xFAU
 
 /*------ CAN A1 ------*/
-//#define CHIP_ID 1U 	// COM_GW
+#define CHIP_ID 1U 	// COM_GW
 //#define CHIP_ID 2U	// HMI_DB
 //#define CHIP_ID 3U	// HVM_BMS
 //#define CHIP_ID 4U	// HVM_ECU
 //#define CHIP_ID 5U	// HVM_PM
 //#define CHIP_ID 6U	// LVS_BMS
-#define CHIP_ID 7U	// LVS_ECU_F
+//#define CHIP_ID 7U	// LVS_ECU_F
 //#define CHIP_ID 8U	// LVS_ECU_R1
 //#define CHIP_ID 9U	// LVS_ECU_R2
 //#define CHIP_ID 10U	// MS_AD_F
