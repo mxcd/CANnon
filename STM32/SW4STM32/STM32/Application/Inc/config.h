@@ -27,6 +27,7 @@
 //#define CHIP_ID 12U	// MS_9D_F
 //#define CHIP_ID 13U	// MS_V2O
 //#define CHIP_ID 14U	// VD_ECU
+//#define CHIP_ID 21U	// MS_AD_OCPD
 
 /*------ CAN A2 ------*/
 //#define CHIP_ID 15U	// MS_AD_R
@@ -35,4 +36,4 @@
 //#define CHIP_ID 18U	// MS_TT_FR
 //#define CHIP_ID 19U	// MS_TT_RL
 //#define CHIP_ID 20U	// MS_TT_RR
-//#define CHIP_ID 21U	// MS_AD_OCPD
+
