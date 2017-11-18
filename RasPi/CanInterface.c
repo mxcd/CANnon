@@ -124,14 +124,14 @@ int receiveMessage(CanMessage* cMsg)
 			}
 
 			//idx = idx2dindex(addr.can_ifindex, &addr);
-
+			/*
 			printf("%x:", frame.can_id);
 			for(i = 0; i < frame.can_dlc; ++i)
 			{
 				cMsg->data[i] = frame.data[i];
 				printf("[%x]", frame.data[i]);
 			}
-			printf("\n");
+			printf("\n");*/
 			cMsg->dlc = frame.can_dlc;
 			cMsg->ext = true;
 			cMsg->id = frame.can_id;

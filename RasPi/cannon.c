@@ -167,7 +167,7 @@ void doFlash(char* deviceName)
 	DEVICE_CONFIG device = findDeviceByName(deviceName);
 
 	int deviceId = device.id;
-	char* file = concat("/home/max/gt_carstate/", concat(device.name, ".bin"));
+	char* file = concat("/usr/cannon/git/gt_carstate/", concat(device.name, ".bin"));
 	printf("Flashing file %s on device %i\n", file, deviceId);
 
 	initCanInterface(deviceId);
@@ -210,7 +210,7 @@ void doFlash(char* deviceName)
 
 	clearInputBuffer();
 
-	waitForSignal(deviceId, STATUS_IN_BOOT_MENU, INTERRUPT_ID, 500);
+	waitForSignal(deviceId, STATUS_IN_BOOT_MENU, INTERRUPT_ID, 100);
 
 	usleep(500000);
 	printf("Waiting for flash to be erased");
@@ -265,7 +265,7 @@ void doFlash(char* deviceName)
 					}
 					else if(msg.targetDeviceId == deviceId && msg.commandId == NACK_ID)
 					{
-						printf("\nReceived NACK!\n");
+//						printf("\nReceived NACK!\n");
 						int k;
 						long sprintFlags = 0;
 						for(k = 0; k < msg.length; ++k)
@@ -304,17 +304,17 @@ void doFlash(char* deviceName)
 
 	usleep(500);
 	int remainder = size%8;
-	printf("remainder: %i\n", remainder);
+//	printf("remainder: %i\n", remainder);
 	if(remainder != 0)
 	{
 		int base = size-(size%8);
-		printf("base: %x\n", base);
+//		printf("base: %x\n", base);
 		int i;
 		char pack[8];
 		for(i = 0; i < remainder; ++i)
 		{
 			pack[i] = binArray[base + i];
-			printf("index: %x\n", (base+i));
+//			printf("index: %x\n", (base+i));
 		}
 		sendFlashPack(deviceId, size/8, pack, remainder);
 	}
@@ -334,7 +334,7 @@ void doFlash(char* deviceName)
 
 	waitForSignal(deviceId, STATUS_STARTING_APP, 0, 0);
 
-	restoreDevicePower();
+//	restoreDevicePower();
 
 	printf("\nThanks for traveling with air penguin!\n");
 }
@@ -366,6 +366,7 @@ void resetDevice(DEVICE_CONFIG device)
 	printf(" CH %i\n", device.CH);
 
 	int startTime = clock();
+	/*
 	printf("saving power states...");
 	while(clock()-startTime < 500000)
 	{
@@ -386,9 +387,10 @@ void resetDevice(DEVICE_CONFIG device)
 		}
 	}
 	printf("done\n");
+	*/
 
 	//int dataOff = 1 << device.CH;
-	int dataOff = 0xFFF;
+	int dataOff = (1 << device.CH);
 	int dataOn = (1 << device.CH) | (1 << (16+device.CH));
 
 
@@ -400,11 +402,7 @@ void resetDevice(DEVICE_CONFIG device)
 	{
 		msg.data[i] = dataOff >> (i*8);
 	}
-	msg.id = LVS_F_CAN_ID;
-	sendMessage(&msg);
-	msg.id = LVS_R1_CAN_ID;
-	sendMessage(&msg);
-	msg.id = LVS_R2_CAN_ID;
+	msg.id = lvs_can_id;
 	sendMessage(&msg);
 
 	usleep(1000000);
@@ -475,7 +473,7 @@ void sendFlashPack(int deviceId, int packId, char* data, int len)
 
 	if(len != 8)
 	{
-		printf("\n\n%x\n%i\n", packId*8, len);
+//		printf("\n\n%x\n%i\n", packId*8, len);
 		int i = 0;
 		for(;i < len; ++i)
 		{
